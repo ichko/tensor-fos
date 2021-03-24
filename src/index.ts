@@ -1,5 +1,9 @@
+import { randomUniform } from '@tensorflow/tfjs';
+
 function main() {
-  alert('hello world2')
+  const t = randomUniform([2, 1]);
+  t.print();
+  document.body.innerHTML = 'test';
 }
 
-main()
+main();
