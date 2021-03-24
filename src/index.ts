@@ -1,5 +1,5 @@
 function main() {
-  alert('hello world')
+  alert('hello world2')
 }
 
 main()
