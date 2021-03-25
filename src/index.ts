@@ -1,9 +1,12 @@
-import { randomUniform } from '@tensorflow/tfjs';
+import * as tf from '@tensorflow/tfjs';
+import { visualize } from './d3-example';
 
 function main() {
-  const t = randomUniform([2, 1]);
+  const t = tf.randomUniform([10, 10]);
   t.print();
-  document.body.innerHTML = 'test';
+  debugger;
+
+  visualize();
 }
 
-main();
+window.onload = () => main();
