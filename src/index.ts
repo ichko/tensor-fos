@@ -1,16 +1,21 @@
 import * as tf from '@tensorflow/tfjs';
-import { visualize } from './tensor-vis';
+import { Heatmap2DVisualizer } from './tensor-vis';
 import * as d3 from 'd3';
 
-d3.select('body')
-  .append('button')
-  .text('Reload')
-  .on('click', () => main());
+window.onload = () => {
+  d3.select('body')
+    .append('button')
+    .text('Reload')
+    .on('click', () => main());
 
-function main() {
-  const t = tf.randomUniform([20, 50]);
+  const t = tf.randomUniform([100, 100]);
+  const vis = new Heatmap2DVisualizer(t);
 
-  visualize(t);
-}
+  const canvas = vis.getHTMLElement();
+  document.body.append(canvas);
 
-window.onload = () => main();
+  function main() {
+    const t = tf.randomUniform([100, 100]);
+    vis.setTensor(t);
+  }
+};
