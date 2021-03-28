@@ -1,12 +1,16 @@
 import * as tf from '@tensorflow/tfjs';
-import { visualize } from './d3-example';
+import { visualize } from './tensor-vis';
+import * as d3 from 'd3';
+
+d3.select('body')
+  .append('button')
+  .text('Reload')
+  .on('click', () => main());
 
 function main() {
-  const t = tf.randomUniform([10, 10]);
-  t.print();
-  debugger;
+  const t = tf.randomUniform([20, 50]);
 
-  visualize();
+  visualize(t);
 }
 
 window.onload = () => main();
