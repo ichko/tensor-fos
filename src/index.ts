@@ -1,5 +1,5 @@
 import * as tf from '@tensorflow/tfjs';
-import { Heatmap2DVisualizer } from './tensor-vis';
+import { NDTensorHeatmapVisualizer } from './visualizers';
 import * as d3 from 'd3';
 
 window.onload = () => {
@@ -8,14 +8,21 @@ window.onload = () => {
     .text('Reload')
     .on('click', () => main());
 
-  const t = tf.randomUniform([100, 100]);
-  const vis = new Heatmap2DVisualizer(t);
+  const shape = [3, 2, 2, 3, 10, 10];
+  const t = tf.randomUniform(shape);
+  const vis = new NDTensorHeatmapVisualizer({
+    pixelSize: 10,
+    tensorShape: t.shape,
+    outerPadding: 5,
+  });
 
   const canvas = vis.getHTMLElement();
   document.body.append(canvas);
 
   function main() {
-    const t = tf.randomUniform([100, 100]);
+    const t = tf.randomNormal(shape);
     vis.setTensor(t);
   }
+
+  main();
 };
