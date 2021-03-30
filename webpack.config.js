@@ -15,6 +15,7 @@ module.exports = {
     ],
   },
   resolve: {
+    modules: [path.resolve('.'), path.resolve('./node_modules')],
     extensions: ['.tsx', '.ts', '.js'],
   },
   output: {
@@ -30,9 +31,10 @@ module.exports = {
     hot: true,
     compress: true,
     port: 8080,
-
   },
-  plugins: [new HtmlWebpackPlugin({
-    title: 'Development',
-  })],
+  plugins: [
+    new HtmlWebpackPlugin({
+      title: 'TensorFos',
+    }),
+  ],
 };
