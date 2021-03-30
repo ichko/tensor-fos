@@ -1,6 +1,7 @@
-import * as tf from '@tensorflow/tfjs';
-import { NDTensorHeatmapVisualizer } from './visualizers';
 import * as d3 from 'd3';
+import * as tf from '@tensorflow/tfjs';
+
+import { NDTensorHeatmapVisualizer } from './visualizers/NDTensorHeatmapVisualizer';
 
 window.onload = () => {
   d3.select('body')
