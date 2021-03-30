@@ -33,6 +33,7 @@
   "dependencies": {
     "color-interpolate": "^1.0.5",
     "colormap": "^2.3.2",
-    "d3": "^6.6.1"
+    "d3": "^6.6.1",
+    "tfjs-data-mnist": "^0.2.0"
   }
 }
