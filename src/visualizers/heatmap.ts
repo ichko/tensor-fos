@@ -1,16 +1,11 @@
 import * as d3 from 'd3';
 import * as tf from '@tensorflow/tfjs';
 import { minMaxNormalize, range, viridis } from 'src/utils';
-
-// TODO: extract
-export interface TensorVisualizer {
-  setTensor(tensor: tf.Tensor): void;
-  getHTMLElement(): HTMLElement;
-}
+import { TensorVisualizer } from './tensor-visualizer';
 
 export type Direction = 'horizontal' | 'vertical';
 
-export interface NDHeatmapVisualizerConfig {
+interface Config {
   outerPadding?: number;
   dimPaddings?: number[];
   dimDirections?: Direction[];
@@ -18,28 +13,31 @@ export interface NDHeatmapVisualizerConfig {
   pixelSize: number;
 }
 
-export class NDTensorHeatmapVisualizer implements TensorVisualizer {
+export class NDTensorHeatmapVisualizer extends TensorVisualizer<Config> {
   private canvas: HTMLCanvasElement;
-  private context: CanvasRenderingContext2D;
 
-  private tensorShape: number[];
+  private context!: CanvasRenderingContext2D;
+  private tensorShape!: number[];
+  private dimDisplacementW!: number[];
+  private dimDisplacementH!: number[];
+  private pixelSize!: number;
+  private ndim!: number;
+  private outerPadding!: number;
+  private dimPaddings!: number[];
 
-  private dimDisplacementW: number[];
-  private dimDisplacementH: number[];
-  private pixelSize: number;
-  private ndim: number;
-  private outerPadding: number;
-  private dimPaddings: number[];
+  constructor(config: Config) {
+    super(config);
+    this.canvas = document.createElement('canvas');
+    this.build(config);
+  }
 
-  constructor({
+  build({
     pixelSize,
     tensorShape,
     outerPadding,
     dimDirections = [],
     dimPaddings = [],
-  }: NDHeatmapVisualizerConfig) {
-    this.canvas = document.createElement('canvas');
-
+  }: Config) {
     this.tensorShape = tensorShape;
     this.pixelSize = pixelSize;
     this.ndim = tensorShape.length;
@@ -99,7 +97,9 @@ export class NDTensorHeatmapVisualizer implements TensorVisualizer {
     this.context = this.canvas.getContext('2d')!;
   }
 
-  setTensor(tensor: tf.Tensor<tf.Rank>): void {
+  setTensor(tensor: tf.Tensor): void {
+    super.setTensor(tensor);
+
     const data = minMaxNormalize(tensor).dataSync();
     const index = range(this.tensorShape.length).fill(0);
 
