@@ -28,7 +28,7 @@ window.onload = async () => {
     .text('Reload')
     .on('click', () => main());
 
-  const shape = [10, 10, 28, 28];
+  const shape = [2, 3, 3, 3, 28, 28];
   const t = tf.randomUniform(shape);
   const vis = new InteractiveTensor(t.shape);
 

@@ -9,7 +9,6 @@ interface Config {
   outerPadding?: number;
   dimPaddings?: number[];
   dimDirections?: Direction[];
-  tensorShape: number[];
   pixelSize: number;
 }
 
@@ -23,21 +22,16 @@ export class NDTensorHeatmapVisualizer extends TensorVisualizer<Config> {
   private pixelSize!: number;
   private ndim!: number;
   private outerPadding!: number;
-  private dimPaddings!: number[];
 
   constructor(config: Config) {
     super(config);
     this.canvas = document.createElement('canvas');
-    this.build(config);
   }
 
-  build({
-    pixelSize,
-    tensorShape,
-    outerPadding,
-    dimDirections = [],
-    dimPaddings = [],
-  }: Config) {
+  protected build(
+    tensorShape: number[],
+    { pixelSize, outerPadding, dimDirections = [], dimPaddings = [] }: Config
+  ) {
     this.tensorShape = tensorShape;
     this.pixelSize = pixelSize;
     this.ndim = tensorShape.length;
@@ -62,8 +56,6 @@ export class NDTensorHeatmapVisualizer extends TensorVisualizer<Config> {
         : range(this.ndim)
             .map(i => Math.floor(4 ** Math.floor(i / 2) / 2))
             .reverse();
-
-    this.dimPaddings = dimPaddings;
 
     range(tensorShape.length)
       .reverse()
@@ -97,9 +89,7 @@ export class NDTensorHeatmapVisualizer extends TensorVisualizer<Config> {
     this.context = this.canvas.getContext('2d')!;
   }
 
-  setTensor(tensor: tf.Tensor): void {
-    super.setTensor(tensor);
-
+  protected draw(tensor: tf.Tensor): void {
     const data = minMaxNormalize(tensor).dataSync();
     const index = range(this.tensorShape.length).fill(0);
 
@@ -130,7 +120,7 @@ export class NDTensorHeatmapVisualizer extends TensorVisualizer<Config> {
     });
   }
 
-  getHTMLElement(): HTMLElement {
+  get domElement(): HTMLElement {
     return this.canvas;
   }
 }

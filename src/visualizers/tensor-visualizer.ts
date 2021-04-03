@@ -2,19 +2,30 @@ import { Tensor } from '@tensorflow/tfjs-core';
 
 export abstract class TensorVisualizer<Config> {
   private lastTensor?: Tensor;
-
-  public constructor(private config: Config) {}
-
-  public setTensor(tensor: Tensor) {
-    this.lastTensor = tensor;
+  private get shape(): number[] | undefined {
+    return this.lastTensor?.shape;
   }
 
-  public abstract getHTMLElement(): HTMLElement;
+  protected abstract build(tensorShape: number[], config: Config): void;
+  protected abstract draw(tensor: Tensor): void;
 
-  public abstract build(config: Config): void;
+  public constructor(private config: Config) {}
+  public abstract get domElement(): HTMLElement;
 
-  public setProps(config: Partial<Config>) {
+  public setTensor(tensor: Tensor) {
+    const shouldRebuild = this.shape !== tensor.shape;
+    this.lastTensor = tensor;
+
+    if (shouldRebuild) {
+      this.build(tensor.shape, this.config);
+    }
+
+    this.draw(tensor);
+  }
+
+  public set(config: Partial<Config>) {
     let shouldRebuild = false;
+
     for (let name in config) {
       if (this.config[name] != config[name]) {
         shouldRebuild = true;
@@ -23,12 +34,9 @@ export abstract class TensorVisualizer<Config> {
       this.config[name] = config[name]!;
     }
 
-    if (shouldRebuild) {
-      this.build(this.config);
-
-      if (this.lastTensor) {
-        this.setTensor(this.lastTensor);
-      }
+    if (shouldRebuild && this.shape && this.lastTensor) {
+      this.build(this.shape, this.config);
+      this.draw(this.lastTensor);
     }
   }
 }

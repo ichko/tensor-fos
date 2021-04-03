@@ -14,23 +14,22 @@ export class InteractiveTensor {
 
     this.vis = new NDTensorHeatmapVisualizer({
       pixelSize: 2,
-      tensorShape: shape,
       outerPadding: 2,
     });
 
-    const canvas = this.vis.getHTMLElement();
+    const canvas = this.vis.domElement;
     settings.addElement('', canvas);
 
     const onVal = (val: number) => {
       console.log(val);
-      this.vis.setProps({ pixelSize: val });
+      this.vis.set({ pixelSize: val });
       const width = canvas.getBoundingClientRect().width + 20;
       settings.setWidth(width);
     };
 
-    onVal(1);
+    onVal(3);
 
-    settings.addRange('padding', 1, 5, 1, 1, onVal);
+    settings.addNumber('padding', 1, 5, 3, 1, onVal);
   }
 
   setTensor(tensor: Tensor) {
