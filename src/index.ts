@@ -3,15 +3,10 @@ import * as tf from '@tensorflow/tfjs';
 import { MNISTDataset } from 'tfjs-data-mnist';
 import Stats from 'stats.js';
 
-import { NDTensorHeatmapVisualizer } from './visualizers/NDTensorHeatmapVisualizer';
 import { Tensor } from '@tensorflow/tfjs';
-import QuickSettings from 'quicksettings';
+import { InteractiveTensor } from './interactive-tensor';
 
 window.onload = async () => {
-  // QuickSettings.useExtStyleSheet();
-  const settings = QuickSettings.create(0, 0, 'Tensor');
-  settings.setWidth(500);
-
   const stats = new Stats();
   stats.dom.style.cssText =
     'position:fixed;top:5px;right:5px;opacity:0.9;z-index:10000';
@@ -35,19 +30,14 @@ window.onload = async () => {
 
   const shape = [10, 10, 28, 28];
   const t = tf.randomUniform(shape);
-  const vis = new NDTensorHeatmapVisualizer({
-    pixelSize: 2,
-    tensorShape: t.shape,
-    outerPadding: 2,
-  });
-
-  const canvas = vis.getHTMLElement();
-  settings.addElement('', canvas);
+  const vis = new InteractiveTensor(t.shape);
 
   async function main() {
-    const dataElement = await dl.next();
-    let tensor = dataElement.value as tf.Tensor;
-    vis.setTensor(tensor);
+    // const dataElement = await dl.next();
+    // let tensor = dataElement.value as tf.Tensor;
+
+    const t = tf.randomUniform(shape);
+    vis.setTensor(t);
   }
 
   async function animate() {
