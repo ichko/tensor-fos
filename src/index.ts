@@ -7,6 +7,7 @@ import { Tensor } from '@tensorflow/tfjs';
 import { InteractiveTensor } from './interactive-tensor';
 import { LineVisualizer } from './visualizers/line';
 import { HeatmapVisualizer } from './visualizers/heatmap';
+import { SmallMultiplesVisualizer } from './visualizers/small-multiples';
 
 window.onload = async () => {
   const stats = new Stats();
@@ -30,18 +31,24 @@ window.onload = async () => {
     .text('Reload')
     .on('click', () => main());
 
-  const shape = [10, 10, 10];
+  const shape = [1, 1, 3, 5, 10, 10];
 
   const heatmap = new HeatmapVisualizer({ pixelSize: 4 });
   const line = new LineVisualizer({ lineWidth: 1 });
+  const multiplies = new SmallMultiplesVisualizer(
+    { nDimsEntity: 2 },
+    () => new LineVisualizer({ lineWidth: 1, width: 200, height: 100 })
+  );
 
   const interact2 = new InteractiveTensor(heatmap);
   const interact = new InteractiveTensor(line);
+  const interactMultiplies = new InteractiveTensor(multiplies);
 
   async function main() {
     const t = tf.randomUniform(shape);
     interact.setTensor(t);
     interact2.setTensor(t);
+    interactMultiplies.setTensor(t);
   }
 
   async function animate() {
