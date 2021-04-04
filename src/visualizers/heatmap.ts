@@ -20,7 +20,6 @@ export class HeatmapVisualizer extends TensorVisualizer<Config> {
   private dimDisplacementW!: number[];
   private dimDisplacementH!: number[];
   private pixelSize!: number;
-  private ndim!: number;
   private outerPadding!: number;
 
   constructor(config: Config) {
@@ -28,13 +27,14 @@ export class HeatmapVisualizer extends TensorVisualizer<Config> {
     this.canvas = document.createElement('canvas');
   }
 
-  protected build(
-    tensorShape: number[],
-    { pixelSize, outerPadding, dimDirections = [], dimPaddings = [] }: Config
-  ) {
-    this.tensorShape = tensorShape;
+  protected build({
+    pixelSize,
+    outerPadding,
+    dimDirections = [],
+    dimPaddings = [],
+  }: Config) {
+    this.tensorShape = this.shape;
     this.pixelSize = pixelSize;
-    this.ndim = tensorShape.length;
 
     let lastDimSizeW = pixelSize;
     let lastDimSizeH = pixelSize;
@@ -46,18 +46,18 @@ export class HeatmapVisualizer extends TensorVisualizer<Config> {
     dimDirections =
       dimDirections.length > 0
         ? dimDirections
-        : range(this.ndim)
+        : range(this.ndim ?? 1)
             .map(i => (i % 2 == 0 ? 'horizontal' : 'vertical'))
             .reverse();
 
     dimPaddings =
       dimPaddings.length > 0
         ? dimPaddings
-        : range(this.ndim)
+        : range(this.ndim ?? 1)
             .map(i => Math.floor(4 ** Math.floor(i / 2) / 2))
             .reverse();
 
-    range(tensorShape.length)
+    range(this.shape.length)
       .reverse()
       .forEach(i => {
         defaultOuterPadding = dimPaddings[i];
@@ -65,13 +65,11 @@ export class HeatmapVisualizer extends TensorVisualizer<Config> {
         if (dimDirections[i] == 'horizontal') {
           this.dimDisplacementW[i] = lastDimSizeW + dimPaddings[i];
           lastDimSizeW =
-            tensorShape[i] * lastDimSizeW +
-            (tensorShape[i] - 1) * dimPaddings[i];
+            this.shape[i] * lastDimSizeW + (this.shape[i] - 1) * dimPaddings[i];
         } else {
           this.dimDisplacementH[i] = lastDimSizeH + dimPaddings[i];
           lastDimSizeH =
-            tensorShape[i] * lastDimSizeH +
-            (tensorShape[i] - 1) * dimPaddings[i];
+            this.shape[i] * lastDimSizeH + (this.shape[i] - 1) * dimPaddings[i];
         }
       });
 
