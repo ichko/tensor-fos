@@ -34,9 +34,12 @@
     "webpack-dev-server": "^3.11.2"
   },
   "dependencies": {
+    "@d3fc/d3fc-axis": "^3.0.5",
+    "@d3fc/d3fc-series": "^6.0.4",
     "color-interpolate": "^1.0.5",
     "colormap": "^2.3.2",
     "d3": "^6.6.1",
+    "d3fc": "^15.1.2",
     "debounce": "^1.2.1",
     "quicksettings": "^3.0.1",
     "stats.js": "^0.17.0",
