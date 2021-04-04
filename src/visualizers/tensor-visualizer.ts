@@ -1,23 +1,33 @@
 import { Tensor } from '@tensorflow/tfjs-core';
+import { arraysEqual } from 'src/utils';
 
 export abstract class TensorVisualizer<Config> {
   private lastTensor?: Tensor;
-  private get shape(): number[] | undefined {
-    return this.lastTensor?.shape;
+
+  public get tensor(): Tensor | undefined {
+    return this.lastTensor;
   }
 
-  protected abstract build(tensorShape: number[], config: Config): void;
+  public get shape(): number[] {
+    return this.lastTensor?.shape || [];
+  }
+
+  public get ndim(): number {
+    return this.lastTensor?.shape.length || -1;
+  }
+
+  protected abstract build(config: Config): void;
   protected abstract draw(tensor: Tensor, config: Config): void;
 
-  public constructor(private config: Config) {}
+  public constructor(protected config: Config) {}
   public abstract get domElement(): HTMLElement;
 
   public setTensor(tensor: Tensor) {
-    const shouldRebuild = this.shape !== tensor.shape;
+    const shouldRebuild = !arraysEqual(this.shape, tensor.shape);
     this.lastTensor = tensor;
 
     if (shouldRebuild) {
-      this.build(tensor.shape, this.config);
+      this.build(this.config);
     }
 
     this.draw(tensor, this.config);
@@ -35,7 +45,7 @@ export abstract class TensorVisualizer<Config> {
     }
 
     if (shouldRebuild && this.shape && this.lastTensor) {
-      this.build(this.shape, this.config);
+      this.build(this.config);
       this.draw(this.lastTensor, this.config);
     }
   }
