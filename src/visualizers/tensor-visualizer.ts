@@ -7,7 +7,7 @@ export abstract class TensorVisualizer<Config> {
   }
 
   protected abstract build(tensorShape: number[], config: Config): void;
-  protected abstract draw(tensor: Tensor): void;
+  protected abstract draw(tensor: Tensor, config: Config): void;
 
   public constructor(private config: Config) {}
   public abstract get domElement(): HTMLElement;
@@ -20,7 +20,7 @@ export abstract class TensorVisualizer<Config> {
       this.build(tensor.shape, this.config);
     }
 
-    this.draw(tensor);
+    this.draw(tensor, this.config);
   }
 
   public set(config: Partial<Config>) {
@@ -36,7 +36,7 @@ export abstract class TensorVisualizer<Config> {
 
     if (shouldRebuild && this.shape && this.lastTensor) {
       this.build(this.shape, this.config);
-      this.draw(this.lastTensor);
+      this.draw(this.lastTensor, this.config);
     }
   }
 }
