@@ -12,7 +12,7 @@ interface Config {
   pixelSize: number;
 }
 
-export class NDTensorHeatmapVisualizer extends TensorVisualizer<Config> {
+export class HeatmapVisualizer extends TensorVisualizer<Config> {
   private canvas: HTMLCanvasElement;
 
   private context!: CanvasRenderingContext2D;
