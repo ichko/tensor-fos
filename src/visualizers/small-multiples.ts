@@ -42,7 +42,6 @@ export class SmallMultiplesVisualizer<T> extends TensorVisualizer<Config> {
     dimGaps = [],
     nDimsEntity,
   }: Config) {
-    debugger;
     if (nDimsEntity > this.ndim - 1) {
       throw new Error(
         'ndim of tensor too small to show meaningful dims of visualization'
@@ -66,7 +65,6 @@ export class SmallMultiplesVisualizer<T> extends TensorVisualizer<Config> {
       front.forEach(node => {
         node.style.display = 'grid';
         node.style.gridGap = `${dimGaps[i]}px`;
-        node.style.backgroundColor = `rgba(255, 0, 0, 0.5)`;
         if (dimDirections[i] == 'horizontal') {
           node.style.gridTemplateColumns = `repeat(${dim}, auto)`;
         } else {
@@ -97,9 +95,8 @@ export class SmallMultiplesVisualizer<T> extends TensorVisualizer<Config> {
     );
     tensor = tensor.reshape([-1, ...entityShape]);
     const itSize = tensor.shape[0];
-
-    range(itSize).forEach(i => {
-      const visTensor = tensor.slice([i], [1]).squeeze([0]);
+    tensor.split(itSize, 0).forEach((t: Tensor, i: number) => {
+      const visTensor = t.squeeze([0]);
       this.visInstances[i].setTensor(visTensor);
     });
   }
