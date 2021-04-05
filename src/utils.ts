@@ -42,3 +42,8 @@ export const arraysEqual = (a: any[], b: any[]): boolean => {
 
   return true;
 };
+
+// SRC - https://flaviocopes.com/how-to-uppercase-first-letter-javascript/
+export const capitalize = (str: string) => {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+};

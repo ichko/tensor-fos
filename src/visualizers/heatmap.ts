@@ -80,9 +80,8 @@ export class HeatmapVisualizer extends TensorVisualizer<Config> {
 
     d3.select(this.canvas)
       .attr('width', canvasWidth)
-      .attr('height', canvasHeight)
-      .style('border', '3px solid black')
-      .style('background', '#fff');
+      .attr('height', canvasHeight);
+    // .style('background', '#fff');
 
     this.context = this.canvas.getContext('2d')!;
   }
