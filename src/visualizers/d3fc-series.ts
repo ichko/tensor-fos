@@ -5,13 +5,7 @@ import * as fc from 'd3fc';
 import * as fcs from '@d3fc/d3fc-series';
 import { capitalize } from 'src/utils';
 
-type SeriesType =
-  | 'line'
-  | 'point'
-  | 'area'
-  | 'bar'
-  | 'candlesticks'
-  | 'heatmap';
+type SeriesType = 'line' | 'point' | 'area' | 'bar' | 'heatmap';
 
 type RenderType = 'webgl' | 'canvas' | 'svg';
 
@@ -65,22 +59,26 @@ function styleSeries(
   series: any,
   { color = 'black', orient = 'vertical', size = 1 }: Style
 ): any {
-  switch (type) {
-    case 'line':
-      return series.orient(orient).lineWidth(size);
-    case 'point':
-      return series.orient(orient).size(size);
-    case 'area':
-      return series.orient(orient);
-    case 'bar':
-      return series.orient(orient).bandwidth(size);
-    case 'candlesticks':
-      return series
-        .orient(orient)
-        .bandwidth(size)
-        .lineWidth(size / 2);
-    case 'heatmap':
+  try {
+    switch (type) {
+      case 'line':
+        return series.orient(orient).lineWidth(size);
+      case 'point':
+        return series.orient(orient).size(size);
+      case 'area':
+        return series.orient(orient);
+      case 'bar':
+        return series.orient(orient).bandwidth(size);
+      case 'heatmap':
+        return series;
+    }
+  } catch (e) {
+    if (e instanceof TypeError) {
+      console.warn(`Could not style series of type ${type} (${e.message})`);
       return series;
+    }
+
+    throw e;
   }
 
   // throw new Error(`Missing type styling code for type ${type}`);
@@ -117,7 +115,7 @@ function buildChart(
     case 'svg':
       break;
     case 'canvas':
-      chart.webglCanvasArea(multi);
+      chart.canvasPlotArea(multi);
       break;
     case 'webgl':
       chart.webglPlotArea(multi);
@@ -130,9 +128,10 @@ function buildChart(
 export class D3fcSeriesVisualizer extends TensorVisualizer<Config> {
   private container: HTMLElement;
   private chart: any;
-  yExtent: any;
-  xExtent: any;
-  selection!: d3.Selection<HTMLElement, unknown, null, undefined>;
+  private yExtent: any;
+  private xExtent: any;
+  private selection!: d3.Selection<HTMLElement, unknown, null, undefined>;
+  private series: any;
 
   constructor(config: Config) {
     super(config);
@@ -146,24 +145,13 @@ export class D3fcSeriesVisualizer extends TensorVisualizer<Config> {
     height = 250,
     type = 'line',
   }: Config): void {
-    this.xExtent = fc
-      .extentLinear()
-      .accessors([(_d: number, i: number) => i])
-      .pad([0, 0]);
-
-    this.yExtent = fc
-      .extentLinear()
-      .accessors([(d: number) => d])
-      .pad([0.3, 0.3]);
-
     const xScale = d3.scaleLinear();
     const yScale = d3.scaleLinear();
 
-    let series = getSeriesConstructor(type, renderer);
-    series.crossValue((_d: number, i: number) => i).mainValue((d: number) => d);
-    series = styleSeries(type, series, style);
+    this.series = getSeriesConstructor(type, renderer);
+    this.series = styleSeries(type, this.series, style);
 
-    this.chart = buildChart(xScale, yScale, renderer, series);
+    this.chart = buildChart(xScale, yScale, renderer, this.series);
 
     this.selection = d3
       .select(this.container)
@@ -172,7 +160,23 @@ export class D3fcSeriesVisualizer extends TensorVisualizer<Config> {
   }
 
   protected draw(tensor: Tensor): void {
+    const shape = tensor.shape;
     const data = tensor.dataSync();
+    const lastDimSize = shape[shape.length - 1];
+
+    this.xExtent = fc
+      .extentLinear()
+      .accessors([(d: number, i: number) => data[i]])
+      .pad([0, 0]);
+
+    this.yExtent = fc
+      .extentLinear()
+      .accessors([(d: number, i: number) => data[i + lastDimSize]])
+      .pad([0.3, 0.3]);
+
+    this.series
+      .crossValue((d: number, i: number) => data[i])
+      .mainValue((d: number, i: number) => data[i + lastDimSize]);
 
     this.chart.yDomain(this.yExtent(data)).xDomain(this.xExtent(data));
     this.selection.datum(data).call(this.chart);
