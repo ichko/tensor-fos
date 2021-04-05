@@ -35,7 +35,7 @@ style.innerHTML = `
 
 document.body.appendChild(style);
 
-function getSeriesConstructor(type: SeriesType, renderer: RenderType) {
+function getSeriesInstance(type: SeriesType, renderer: RenderType) {
   // TODO: This is just a hack. Remove after d3fc provide types.
   interface Indexable {
     [name: string]: any;
@@ -48,7 +48,13 @@ function getSeriesConstructor(type: SeriesType, renderer: RenderType) {
   const d3fcSeriesObj = fcs as Indexable;
 
   if (d3fcSeriesObj.hasOwnProperty(d3fcAccessor)) {
-    return d3fcSeriesObj[d3fcAccessor]();
+    const instance = d3fcSeriesObj[d3fcAccessor]();
+
+    if (type === 'heatmap') {
+      return fc.autoBandwidth(instance).widthFraction(1.0);
+    }
+
+    return instance;
   } else {
     throw new Error(
       `Error: ${renderer} renderer and ${type} series do not exist as "${d3fcAccessor}" property on d3fc-series`
@@ -93,7 +99,7 @@ function buildChart(
   series: any
 ) {
   const gridlines = fc.annotationSvgGridline().yTicks(5).xTicks(0);
-  const svgMultiArr = [gridlines];
+  const svgMultiArr = [];
   let multi: any = undefined;
 
   switch (renderer) {
@@ -130,11 +136,11 @@ function buildChart(
 export class D3fcSeriesVisualizer extends TensorVisualizer<Config> {
   private container: HTMLElement;
   private chart: any;
-  private yExtent: any;
-  private xExtent: any;
   private selection!: d3.Selection<HTMLElement, unknown, null, undefined>;
   private series: any;
   private crossIndex!: CrossIndex;
+  private xScale!: d3.ScaleLinear<number, number, never>;
+  private yScale!: d3.ScaleLinear<number, number, never>;
 
   constructor(config: Config) {
     super(config);
@@ -149,14 +155,15 @@ export class D3fcSeriesVisualizer extends TensorVisualizer<Config> {
     type = 'line',
     crossIndex = 'infer',
   }: Config): void {
-    const xScale = d3.scaleLinear();
-    const yScale = d3.scaleLinear();
+    this.xScale = d3.scaleLinear();
+    this.yScale = d3.scaleLinear();
 
+    this.config.renderer = renderer;
     this.crossIndex = crossIndex;
-    this.series = getSeriesConstructor(type, renderer);
+    this.series = getSeriesInstance(type, renderer);
     this.series = styleSeries(type, this.series, style);
 
-    this.chart = buildChart(xScale, yScale, renderer, this.series);
+    this.chart = buildChart(this.xScale, this.yScale, renderer, this.series);
 
     this.selection = d3
       .select(this.container)
@@ -167,27 +174,61 @@ export class D3fcSeriesVisualizer extends TensorVisualizer<Config> {
   protected draw(tensor: Tensor): void {
     const shape = tensor.shape;
     const data = tensor.dataSync();
-    const lastDimSize = shape[shape.length - 1];
 
-    const inferredIndexType: CrossIndex =
-      this.crossIndex === 'infer' && shape.length > 1
-        ? 'from-tensor'
-        : 'consecutive';
+    if (this.config.type === 'heatmap') {
+      const [height, width] = tensor.shape.slice(
+        tensor.shape.length - 2,
+        tensor.shape.length
+      );
 
-    let crossIndex = (d: number, i: number) => i;
-    let mainIndex = (d: number, i: number) => data[i];
+      const crossIndex = (d: number, i: number) => i % width;
+      const mainIndex = (d: number, i: number) => Math.floor(i / width);
 
-    if (inferredIndexType == 'from-tensor') {
-      crossIndex = (d: number, i: number) => data[i];
-      mainIndex = (d: number, i: number) => data[i + lastDimSize];
+      const xExtent = fc
+        .extentLinear()
+        .accessors([crossIndex])
+        .pad([0, 0])
+        .include([-0.5, width - 0.5]);
+      const yExtent = fc
+        .extentLinear()
+        .accessors([mainIndex])
+        .pad([0, 0])
+        .include([-0.5, height - 0.5]);
+
+      this.xScale.range([0, width]);
+      this.yScale.range([height, 0]);
+
+      this.series
+        .xValue(crossIndex)
+        .yValue(mainIndex)
+        .colorValue((d: number, _i: number) => d)
+        .colorInterpolate(d3.interpolateViridis);
+
+      this.chart.yDomain(yExtent(data)).xDomain(xExtent(data));
+      this.selection.datum(data).call(this.chart);
+    } else {
+      const lastDimSize = shape[shape.length - 1];
+      const inferredIndexType: CrossIndex =
+        this.crossIndex === 'infer' && shape.length > 1
+          ? 'from-tensor'
+          : 'consecutive';
+
+      let crossIndex = (_d: number, i: number) => i;
+      let mainIndex = (_d: number, i: number) => data[i];
+
+      if (inferredIndexType == 'from-tensor') {
+        crossIndex = (_d: number, i: number) => data[i];
+        mainIndex = (_d: number, i: number) => data[i + lastDimSize];
+      }
+
+      const xExtent = fc.extentLinear().accessors([crossIndex]).pad([0, 0]);
+      const yExtent = fc.extentLinear().accessors([mainIndex]).pad([0.3, 0.3]);
+
+      this.series.crossValue(crossIndex).mainValue(mainIndex);
+
+      this.chart.yDomain(yExtent(data)).xDomain(xExtent(data));
+      this.selection.datum(data).call(this.chart);
     }
-
-    this.xExtent = fc.extentLinear().accessors([crossIndex]).pad([0, 0]);
-    this.yExtent = fc.extentLinear().accessors([mainIndex]).pad([0.3, 0.3]);
-    this.series.crossValue(crossIndex).mainValue(mainIndex);
-
-    this.chart.yDomain(this.yExtent(data)).xDomain(this.xExtent(data));
-    this.selection.datum(data).call(this.chart);
   }
 
   public get domElement(): HTMLElement {
