@@ -9,6 +9,7 @@ type SeriesType = 'line' | 'point' | 'area' | 'bar' | 'heatmap';
 
 type RenderType = 'webgl' | 'canvas' | 'svg';
 
+type CrossIndex = 'infer' | 'consecutive' | 'from-tensor';
 interface Style {
   size?: number;
   color?: string;
@@ -21,6 +22,7 @@ interface Config {
   style?: Style;
   width?: number;
   height?: number;
+  crossIndex?: CrossIndex;
 }
 
 const style = document.createElement('style');
@@ -132,6 +134,7 @@ export class D3fcSeriesVisualizer extends TensorVisualizer<Config> {
   private xExtent: any;
   private selection!: d3.Selection<HTMLElement, unknown, null, undefined>;
   private series: any;
+  private crossIndex!: CrossIndex;
 
   constructor(config: Config) {
     super(config);
@@ -144,10 +147,12 @@ export class D3fcSeriesVisualizer extends TensorVisualizer<Config> {
     width = 400,
     height = 250,
     type = 'line',
+    crossIndex = 'infer',
   }: Config): void {
     const xScale = d3.scaleLinear();
     const yScale = d3.scaleLinear();
 
+    this.crossIndex = crossIndex;
     this.series = getSeriesConstructor(type, renderer);
     this.series = styleSeries(type, this.series, style);
 
@@ -164,19 +169,22 @@ export class D3fcSeriesVisualizer extends TensorVisualizer<Config> {
     const data = tensor.dataSync();
     const lastDimSize = shape[shape.length - 1];
 
-    this.xExtent = fc
-      .extentLinear()
-      .accessors([(d: number, i: number) => data[i]])
-      .pad([0, 0]);
+    const inferredIndexType: CrossIndex =
+      this.crossIndex === 'infer' && shape.length > 1
+        ? 'from-tensor'
+        : 'consecutive';
 
-    this.yExtent = fc
-      .extentLinear()
-      .accessors([(d: number, i: number) => data[i + lastDimSize]])
-      .pad([0.3, 0.3]);
+    let crossIndex = (d: number, i: number) => i;
+    let mainIndex = (d: number, i: number) => data[i];
 
-    this.series
-      .crossValue((d: number, i: number) => data[i])
-      .mainValue((d: number, i: number) => data[i + lastDimSize]);
+    if (inferredIndexType == 'from-tensor') {
+      crossIndex = (d: number, i: number) => data[i];
+      mainIndex = (d: number, i: number) => data[i + lastDimSize];
+    }
+
+    this.xExtent = fc.extentLinear().accessors([crossIndex]).pad([0, 0]);
+    this.yExtent = fc.extentLinear().accessors([mainIndex]).pad([0.3, 0.3]);
+    this.series.crossValue(crossIndex).mainValue(mainIndex);
 
     this.chart.yDomain(this.yExtent(data)).xDomain(this.xExtent(data));
     this.selection.datum(data).call(this.chart);
