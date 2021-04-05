@@ -5,7 +5,7 @@ import Stats from 'stats.js';
 
 import { Tensor } from '@tensorflow/tfjs';
 import { InteractiveTensor } from './interactive-tensor';
-import { LineVisualizer } from './visualizers/line';
+import { D3fcSeriesVisualizer } from './visualizers/d3fc-series';
 import { HeatmapVisualizer } from './visualizers/heatmap';
 import { SmallMultiplesVisualizer } from './visualizers/small-multiples';
 
@@ -31,13 +31,22 @@ window.onload = async () => {
     .text('Reload')
     .on('click', () => main());
 
-  const shape = [1, 1, 3, 5, 10, 10];
+  const shape = [5, 10, 10];
 
   const heatmap = new HeatmapVisualizer({ pixelSize: 4 });
-  const line = new LineVisualizer({ lineWidth: 1 });
+  const line = new D3fcSeriesVisualizer({
+    renderer: 'webgl',
+    type: 'line',
+    style: { size: 2 },
+  });
   const multiplies = new SmallMultiplesVisualizer(
-    { nDimsEntity: 2 },
-    () => new LineVisualizer({ lineWidth: 1, width: 200, height: 100 })
+    { nDimsEntity: 2, dimDirections: ['horizontal'] },
+    () =>
+      new D3fcSeriesVisualizer({
+        renderer: 'webgl',
+        type: 'line',
+        style: { size: 2 },
+      })
   );
 
   const interact2 = new InteractiveTensor(heatmap);
@@ -53,7 +62,7 @@ window.onload = async () => {
 
   async function animate() {
     stats.begin();
-
+    main();
     stats.end();
 
     requestAnimationFrame(animate);
