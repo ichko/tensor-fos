@@ -8,8 +8,29 @@ import { InteractiveTensor } from './interactive-tensor';
 import { D3fcSeriesVisualizer } from './visualizers/d3fc-series';
 import { HeatmapVisualizer } from './visualizers/heatmap';
 import { SmallMultiplesVisualizer } from './visualizers/small-multiples';
+import QuickSettings, { AnyModel, QuickSettingsPanel } from 'quicksettings';
+
+function makeMenu() {
+  let menu: QuickSettingsPanel<AnyModel, string> | undefined = undefined;
+
+  window.document.ondblclick = (e: MouseEvent) => {
+    console.log(e);
+
+    menu = QuickSettings.create(e.clientX, e.clientY, 'Menu');
+    menu.addButton('Create Normal Tensor', () => {
+      alert();
+    });
+  };
+
+  window.document.onclick = () => {
+    menu?.destroy();
+    menu = undefined;
+  };
+}
 
 window.onload = async () => {
+  makeMenu();
+
   const stats = new Stats();
   stats.dom.style.cssText =
     'position:fixed;top:5px;right:5px;opacity:0.9;z-index:10000';
@@ -31,38 +52,39 @@ window.onload = async () => {
     .text('Reload')
     .on('click', () => main());
 
-  const shape = [5, 10, 10];
+  const shape = [3, 10, 10];
 
   const heatmap = new HeatmapVisualizer({ pixelSize: 4 });
   const line = new D3fcSeriesVisualizer({
     renderer: 'webgl',
     type: 'line',
     style: { size: 2 },
+    crossIndex: 'consecutive',
   });
   const multiplies = new SmallMultiplesVisualizer(
     { nDimsEntity: 2, dimDirections: ['horizontal'] },
     () =>
       new D3fcSeriesVisualizer({
-        renderer: 'webgl',
-        type: 'line',
+        renderer: 'canvas',
+        type: 'heatmap',
         style: { size: 2 },
       })
   );
 
-  const interact2 = new InteractiveTensor(heatmap);
   const interact = new InteractiveTensor(line);
+  const interactHeatmap = new InteractiveTensor(heatmap);
   const interactMultiplies = new InteractiveTensor(multiplies);
 
   async function main() {
     const t = tf.randomUniform(shape);
     interact.setTensor(t);
-    interact2.setTensor(t);
+    interactHeatmap.setTensor(t);
     interactMultiplies.setTensor(t);
   }
 
   async function animate() {
     stats.begin();
-    main();
+    // main();
     stats.end();
 
     requestAnimationFrame(animate);
