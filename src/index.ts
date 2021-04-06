@@ -30,6 +30,7 @@ function makeMenu() {
 
 window.onload = async () => {
   makeMenu();
+  tf.backend();
 
   const stats = new Stats();
   stats.dom.style.cssText =
@@ -66,7 +67,7 @@ window.onload = async () => {
     () =>
       new D3fcSeriesVisualizer({
         renderer: 'canvas',
-        type: 'heatmap',
+        type: 'line',
         style: { size: 2 },
       })
   );
@@ -75,16 +76,18 @@ window.onload = async () => {
   const interactHeatmap = new InteractiveTensor(heatmap);
   const interactMultiplies = new InteractiveTensor(multiplies);
 
+  let t = 0;
   async function main() {
-    const t = tf.randomUniform(shape);
-    interact.setTensor(t);
-    interactHeatmap.setTensor(t);
-    interactMultiplies.setTensor(t);
+    t += 0.1;
+    const tensor = tf.sin(tf.range(-4 + t, 4 + t, 0.05).reshape([2, 2, 40]));
+    interact.setTensor(tensor);
+    interactHeatmap.setTensor(tensor);
+    interactMultiplies.setTensor(tensor);
   }
 
   async function animate() {
     stats.begin();
-    // main();
+    main();
     stats.end();
 
     requestAnimationFrame(animate);

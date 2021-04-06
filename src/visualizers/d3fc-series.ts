@@ -23,6 +23,7 @@ interface Config {
   width?: number;
   height?: number;
   crossIndex?: CrossIndex;
+  showAxis?: boolean;
 }
 
 const style = document.createElement('style');
@@ -96,7 +97,8 @@ function buildChart(
   xScale: d3.ScaleLinear<number, number, never>,
   yScale: d3.ScaleLinear<number, number, never>,
   renderer: RenderType,
-  series: any
+  series: any,
+  showAxis: boolean
 ) {
   const gridlines = fc.annotationSvgGridline().yTicks(5).xTicks(0);
   const svgMultiArr = [];
@@ -154,6 +156,7 @@ export class D3fcSeriesVisualizer extends TensorVisualizer<Config> {
     height = 250,
     type = 'line',
     crossIndex = 'infer',
+    showAxis = true,
   }: Config): void {
     this.xScale = d3.scaleLinear();
     this.yScale = d3.scaleLinear();
@@ -163,7 +166,13 @@ export class D3fcSeriesVisualizer extends TensorVisualizer<Config> {
     this.series = getSeriesInstance(type, renderer);
     this.series = styleSeries(type, this.series, style);
 
-    this.chart = buildChart(this.xScale, this.yScale, renderer, this.series);
+    this.chart = buildChart(
+      this.xScale,
+      this.yScale,
+      renderer,
+      this.series,
+      showAxis
+    );
 
     this.selection = d3
       .select(this.container)
@@ -181,8 +190,8 @@ export class D3fcSeriesVisualizer extends TensorVisualizer<Config> {
         tensor.shape.length
       );
 
-      const crossIndex = (d: number, i: number) => i % width;
-      const mainIndex = (d: number, i: number) => Math.floor(i / width);
+      const crossIndex = (_d: number, i: number) => i % width;
+      const mainIndex = (_d: number, i: number) => Math.floor(i / width);
 
       const xExtent = fc
         .extentLinear()
