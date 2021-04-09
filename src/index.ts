@@ -67,7 +67,7 @@ window.onload = async () => {
     () =>
       new D3fcSeriesVisualizer({
         renderer: 'canvas',
-        type: 'line',
+        type: 'heatmap',
         style: { size: 2 },
       })
   );
@@ -78,11 +78,19 @@ window.onload = async () => {
 
   let t = 0;
   async function main() {
-    t += 0.1;
-    const tensor = tf.sin(tf.range(-4 + t, 4 + t, 0.05).reshape([2, 2, 40]));
-    interact.setTensor(tensor);
-    interactHeatmap.setTensor(tensor);
-    interactMultiplies.setTensor(tensor);
+    t += 1;
+    const tensor = tf.sin(
+      tf
+        .range(-4, 4, 0.05)
+        .add(t / 10)
+        .reshape([2, 2, 40])
+    );
+
+    if (t % 2 == 0) {
+      interact.setTensor(tensor);
+      interactHeatmap.setTensor(tensor);
+      interactMultiplies.setTensor(tensor);
+    }
   }
 
   async function animate() {

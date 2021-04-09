@@ -52,7 +52,7 @@ function getSeriesInstance(type: SeriesType, renderer: RenderType) {
     const instance = d3fcSeriesObj[d3fcAccessor]();
 
     if (type === 'heatmap') {
-      return fc.autoBandwidth(instance).widthFraction(1.0);
+      return fc.autoBandwidth(instance).widthFraction(1.1);
     }
 
     return instance;
