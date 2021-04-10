@@ -1,15 +1,15 @@
-import { randomNormal } from '@tensorflow/tfjs-core';
 import * as tf from '@tensorflow/tfjs';
 
 import QuickSettings, { AnyModel, QuickSettingsPanel } from 'quicksettings';
 import Stats from 'stats.js';
-import { QuickSettingsTensorUI } from './interactive-ui';
+import { QuickSettingsWidgetUI } from './widget-ui';
 import {
   D3fcSeriesVisualizer,
   SeriesType,
   RenderType,
 } from './visualizers/d3fc-series';
 import { SmallMultiplesVisualizer } from './visualizers/small-multiples';
+import { UPlotVisualizer } from './visualizers/uplot-visualizer';
 
 export function makeStats() {
   const stats = new Stats();
@@ -40,7 +40,7 @@ function createDefaultTensorVisUI(x: number, y: number) {
     vis.setTensor(t);
   };
 
-  const ui = new QuickSettingsTensorUI({
+  const ui = new QuickSettingsWidgetUI({
     pos: { x, y },
     title: 'd3fc tensor',
     widgets: [
@@ -121,8 +121,10 @@ function createDefaultTensorVisUI(x: number, y: number) {
   setTensor();
 }
 
-export function makeMenu() {
+export function makeUI() {
   let menu: QuickSettingsPanel<AnyModel, string> | undefined = undefined;
+
+  const uplotVis = new UPlotVisualizer();
 
   createDefaultTensorVisUI(20, 20);
 
