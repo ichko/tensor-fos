@@ -3,12 +3,13 @@ import * as tf from '@tensorflow/tfjs';
 
 import QuickSettings, { AnyModel, QuickSettingsPanel } from 'quicksettings';
 import Stats from 'stats.js';
-import { InteractiveUI } from './interactive-ui';
+import { QuickSettingsTensorUI } from './interactive-ui';
 import {
   D3fcSeriesVisualizer,
   SeriesType,
   RenderType,
 } from './visualizers/d3fc-series';
+import { SmallMultiplesVisualizer } from './visualizers/small-multiples';
 
 export function makeStats() {
   const stats = new Stats();
@@ -20,74 +21,117 @@ export function makeStats() {
   return stats;
 }
 
-class D3FCWrapper extends D3fcSeriesVisualizer {
-  setSinTensor() {
-    const t = 1;
-    const tensor = tf.sin(
-      tf
-        .range(-4, 4, 0.05)
-        .add(t / 10)
-        .reshape([2, 2, 40])
-    );
-    this.setTensor(tensor);
-  }
-  setNormalTensor() {
-    const shape = [2, 2, 10, 10];
-    const tensor = randomNormal(shape);
-    this.setTensor(tensor);
-  }
+function createDefaultTensorVisUI(x: number, y: number) {
+  const vis = new SmallMultiplesVisualizer(
+    { nDimsEntity: 2 },
+    () =>
+      new D3fcSeriesVisualizer({
+        renderer: 'canvas',
+        type: 'heatmap',
+        width: 300,
+        height: 300,
+      })
+  );
 
-  setType(type: SeriesType) {
-    super.set({ type: type });
-  }
+  let shape: number[] = [2, 2, 32, 32];
 
-  setRenderer(renderer: RenderType) {
-    super.set({ renderer: renderer });
-  }
+  const setTensor = () => {
+    const t = tf.randomNormal(shape);
+    vis.setTensor(t);
+  };
+
+  const ui = new QuickSettingsTensorUI({
+    pos: { x, y },
+    title: 'd3fc tensor',
+    widgets: [
+      { type: 'element', element: vis.domElement },
+      {
+        type: 'text',
+        title: 'shape',
+        initial: '2 2 32 32',
+        update: val =>
+          (shape = val
+            .split(' ')
+            .map(v => +v)
+            .filter(v => v !== 0)),
+      },
+      {
+        type: 'button',
+        title: 'randomize',
+        update: setTensor,
+      },
+      {
+        type: 'button',
+        title: 'sin data',
+        update: () => {
+          const numUnits = [1, ...shape].reduce((a, b) => a * b);
+          const tensor = tf.sin(
+            tf
+              .range(0, numUnits, 1)
+              .div(shape.length * 100)
+              .reshape(shape)
+          );
+          vis.setTensor(tensor);
+        },
+      },
+      {
+        type: 'drop-down',
+        values: ['heatmap', 'area', 'bar', 'line', 'point'] as SeriesType[],
+        update: (type: SeriesType) => vis.setInternal({ type: type }),
+      },
+      {
+        type: 'drop-down',
+        values: ['canvas', 'svg', 'webgl'] as RenderType[],
+        update: (type: RenderType) => vis.setInternal({ renderer: type }),
+      },
+      {
+        type: 'drop-down',
+        values: ['canvas', 'svg', 'webgl'] as RenderType[],
+        update: (type: RenderType) => vis.setInternal({ renderer: type }),
+      },
+      {
+        type: 'number',
+        title: 'width',
+        min: 100,
+        max: 500,
+        initial: 300,
+        step: 1,
+        update: (val: number) => vis.setInternal({ width: val }),
+      },
+      {
+        type: 'number',
+        title: 'height',
+        min: 100,
+        max: 500,
+        initial: 300,
+        step: 1,
+        update: (val: number) => vis.setInternal({ height: val }),
+      },
+      {
+        type: 'button',
+        title: 'delete',
+        update: () => {
+          ui.domElement.remove();
+        },
+      },
+    ],
+  });
+
+  document.body.appendChild(ui.domElement);
+  setTensor();
 }
 
 export function makeMenu() {
   let menu: QuickSettingsPanel<AnyModel, string> | undefined = undefined;
+
+  createDefaultTensorVisUI(20, 20);
 
   window.document.body.ondblclick = (e: MouseEvent) => {
     if (e.target !== document.body) return;
 
     menu = QuickSettings.create(e.clientX, e.clientY, 'Menu');
     menu.addButton('Create Normal Tensor', () => {
-      const instance = new D3FCWrapper({
-        renderer: 'svg',
-        type: 'line',
-      });
-
-      const ui = new InteractiveUI(
-        { x: e.clientX, y: e.clientY },
-        {
-          ctor: () => instance,
-          properties: [
-            { accessor: 'domElement', type: 'element' },
-            { accessor: 'setNormalTensor', type: 'button' },
-            {
-              accessor: 'setType',
-              type: 'drop-down',
-              values: [
-                'area',
-                'bar',
-                'heatmap',
-                'line',
-                'point',
-              ] as SeriesType[],
-            },
-            {
-              accessor: 'setRenderer',
-              type: 'drop-down',
-              values: ['canvas', 'svg', 'webgl'] as RenderType[],
-            },
-          ],
-        }
-      );
-
-      ui.build();
-      instance.setNormalTensor();
+      createDefaultTensorVisUI(e.clientX - 300, e.clientY - 500);
     });
   };
 
