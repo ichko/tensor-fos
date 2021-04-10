@@ -6,11 +6,14 @@ module.exports = {
   entry: './src/index.ts',
   devtool: 'inline-source-map',
   module: {
-    rules: [
-      {
+    rules: [{
         test: /\.tsx?$/,
         use: 'ts-loader',
         exclude: /node_modules/,
+      },
+      {
+        test: /\.css$/i,
+        use: ['style-loader', 'css-loader'],
       },
     ],
   },
@@ -35,6 +38,12 @@ module.exports = {
   plugins: [
     new HtmlWebpackPlugin({
       title: 'TensorFos',
+      templateContent: `
+      <html>
+        <body>
+        </body>
+      </html>
+    `
     }),
   ],
 };
