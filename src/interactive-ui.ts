@@ -2,104 +2,115 @@ import QuickSettings, { AnyModel, QuickSettingsPanel } from 'quicksettings';
 
 let lastX = 10;
 
-interface Base<T> {
-  accessor: keyof T;
+interface BaseWidget {
   initial?: any;
+  title?: string;
 }
 
-interface Button<T> extends Base<T> {
+interface Button extends BaseWidget {
   type: 'button';
+  update: () => void;
 }
 
-interface Boolean<T> extends Base<T> {
+interface Boolean extends BaseWidget {
   type: 'boolean';
+  update: (val: boolean) => void;
 }
 
-interface DropDown<T> extends Base<T> {
+interface DropDown extends BaseWidget {
   type: 'drop-down';
-  values: string[];
+  values: any[];
+  update: (val: any) => void;
 }
-interface Text<T> extends Base<T> {
+interface Text extends BaseWidget {
   type: 'text';
+  update: (val: string) => void;
 }
 
-interface Range<T> extends Base<T> {
+interface Range extends BaseWidget {
   type: 'range';
   min: number;
   max: number;
   initial: number;
   step: number;
+  update: (val: number) => void;
 }
 
-interface Element<T> extends Base<T> {
+interface Number extends BaseWidget {
+  type: 'number';
+  min: number;
+  max: number;
+  initial: number;
+  step: number;
+  update: (val: number) => void;
+}
+
+interface Element extends BaseWidget {
   type: 'element';
+  element: HTMLElement;
 }
 
-type Property<T> =
-  | Button<T>
-  | Boolean<T>
-  | DropDown<T>
-  | Text<T>
-  | Range<T>
-  | Element<T>;
+type Widget = Button | Boolean | DropDown | Text | Range | Element | Number;
 
-export interface Interactive<T> {
-  ctor: () => T;
-  properties: Property<T>[];
+interface Props {
+  title: string;
+  pos: { x: number; y: number };
+  widgets: Widget[];
 }
 
-export class InteractiveUI<T extends Object> {
-  private settings: QuickSettingsPanel<AnyModel, string>;
-  private instance: T;
+export class QuickSettingsTensorUI {
+  private widgets: Widget[];
+  private title: string;
+  private pos: { x: number; y: number };
 
-  constructor(
-    { x, y }: { x: number; y: number },
-    private interactive: Interactive<T>
-  ) {
-    this.instance = this.interactive.ctor();
-    this.settings = QuickSettings.create(x, y, this.instance.constructor.name);
+  private element: ChildNode;
 
-    const anySettings = this.settings as any;
-    anySettings._panel.style.width = 'auto';
+  get domElement() {
+    return this.element;
   }
 
-  build() {
-    this.interactive.properties.forEach(p => {
-      let instanceProp = this.instance[p.accessor] as any;
+  constructor({ pos, title, widgets }: Props) {
+    this.pos = pos;
+    this.widgets = widgets;
+    this.title = title;
 
-      if (typeof instanceProp === 'function') {
-        instanceProp = instanceProp.bind(this.instance);
-      }
+    const parent = document.createElement('div');
+    const settings = QuickSettings.create(
+      this.pos.x,
+      this.pos.y,
+      this.title,
+      parent
+    );
 
-      const accessorString = p.accessor.toString();
+    this.element = parent.firstChild!;
 
-      switch (p.type) {
+    const anySettings = settings as any;
+    anySettings._panel.style.width = 'auto';
+
+    this.widgets.forEach(w => {
+      const { title = '', initial } = w;
+
+      switch (w.type) {
         case 'boolean':
-          this.settings.addBoolean(accessorString, p.initial, instanceProp);
+          settings.addBoolean(title, initial, w.update);
           break;
         case 'button':
-          this.settings.addButton(accessorString, instanceProp);
+          settings.addButton(title, w.update);
           break;
         case 'drop-down':
-          this.settings.addDropDown(accessorString, p.values, ({ value }) =>
-            instanceProp(value)
-          );
+          settings.addDropDown(title, w.values, ({ value }) => w.update(value));
           break;
         case 'element':
-          this.settings.addElement(accessorString, instanceProp);
+          settings.addElement(title, w.element);
           break;
         case 'text':
-          this.settings.addText(accessorString, p.initial, instanceProp);
+          settings.addText(title, initial, w.update);
           break;
         case 'range':
-          this.settings.addRange(
-            accessorString,
-            p.min,
-            p.max,
-            p.initial,
-            p.step,
-            instanceProp
-          );
+          settings.addRange(title, w.min, w.max, w.initial, w.step, w.update);
+          break;
+        case 'number':
+          settings.addNumber(title, w.min, w.max, w.initial, w.step, w.update);
           break;
       }
     });
