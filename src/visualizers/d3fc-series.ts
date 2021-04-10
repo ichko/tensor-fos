@@ -5,9 +5,9 @@ import * as fc from 'd3fc';
 import * as fcs from '@d3fc/d3fc-series';
 import { capitalize } from 'src/utils';
 
-type SeriesType = 'line' | 'point' | 'area' | 'bar' | 'heatmap';
+export type SeriesType = 'line' | 'point' | 'area' | 'bar' | 'heatmap';
 
-type RenderType = 'webgl' | 'canvas' | 'svg';
+export type RenderType = 'webgl' | 'canvas' | 'svg';
 
 type CrossIndex = 'infer' | 'consecutive' | 'from-tensor';
 interface Style {
