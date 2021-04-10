@@ -1,6 +1,4 @@
-import QuickSettings, { AnyModel, QuickSettingsPanel } from 'quicksettings';
-
-let lastX = 10;
+import QuickSettings from 'quicksettings';
 
 interface BaseWidget {
   initial?: any;
@@ -58,7 +56,7 @@ interface Props {
   widgets: Widget[];
 }
 
-export class QuickSettingsTensorUI {
+export class QuickSettingsWidgetUI {
   private widgets: Widget[];
   private title: string;
   private pos: { x: number; y: number };
