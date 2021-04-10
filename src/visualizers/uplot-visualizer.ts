@@ -46,12 +46,15 @@ export class UPlotVisualizer extends TensorVisualizer<Config> {
 
     let uplot = new uPlot(opts, data as any, document.body);
   }
+
   protected build(config: Config): void {
     throw new Error('Method not implemented.');
   }
+
   protected draw(tensor: Tensor<Rank>, config: Config): void {
     throw new Error('Method not implemented.');
   }
+
   public get domElement(): HTMLElement {
     throw new Error('Method not implemented.');
   }

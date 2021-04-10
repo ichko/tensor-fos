@@ -27,6 +27,7 @@ export abstract class TensorVisualizer<Config> {
     this.lastTensor = tensor;
 
     if (shouldRebuild) {
+      this.domElement.innerText = '';
       this.build(this.config);
     }
 
@@ -45,6 +46,7 @@ export abstract class TensorVisualizer<Config> {
     }
 
     if (shouldRebuild && this.shape && this.lastTensor) {
+      this.domElement.innerText = '';
       this.build(this.config);
       this.draw(this.lastTensor, this.config);
     }
