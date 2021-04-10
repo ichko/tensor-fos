@@ -101,6 +101,12 @@ export class SmallMultiplesVisualizer<T> extends TensorVisualizer<Config> {
     });
   }
 
+  public setInternal(config: Partial<T>) {
+    this.visInstances.forEach(vi => {
+      vi.set(config);
+    });
+  }
+
   public get domElement(): HTMLElement {
     return this.container;
   }
