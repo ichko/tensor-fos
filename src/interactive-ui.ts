@@ -19,16 +19,29 @@ interface DropDown<T> extends Base<T> {
   type: 'drop-down';
   values: string[];
 }
+interface Text<T> extends Base<T> {
+  type: 'text';
+}
 
 interface Range<T> extends Base<T> {
   type: 'range';
+  min: number;
+  max: number;
+  initial: number;
+  step: number;
 }
 
 interface Element<T> extends Base<T> {
   type: 'element';
 }
 
-type Property<T> = Button<T> | Boolean<T> | DropDown<T> | Range<T> | Element<T>;
+type Property<T> =
+  | Button<T>
+  | Boolean<T>
+  | DropDown<T>
+  | Text<T>
+  | Range<T>
+  | Element<T>;
 
 export interface Interactive<T> {
   ctor: () => T;
@@ -62,7 +75,7 @@ export class InteractiveUI<T extends Object> {
 
       switch (p.type) {
         case 'boolean':
-          this.settings.addBoolean(accessorString, true, instanceProp);
+          this.settings.addBoolean(accessorString, p.initial, instanceProp);
           break;
         case 'button':
           this.settings.addButton(accessorString, instanceProp);
@@ -75,13 +88,19 @@ export class InteractiveUI<T extends Object> {
         case 'element':
           this.settings.addElement(accessorString, instanceProp);
           break;
-        case 'range':
-          this.settings.addRange(accessorString, 0, 1, 0, 0.1, instanceProp);
+        case 'text':
+          this.settings.addText(accessorString, p.initial, instanceProp);
           break;
-      }
-
-      if (p.initial) {
-        this.settings.setValue(accessorString, p.initial);
+        case 'range':
+          this.settings.addRange(
+            accessorString,
+            p.min,
+            p.max,
+            p.initial,
+            p.step,
+            instanceProp
+          );
+          break;
       }
     });
   }
