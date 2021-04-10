@@ -9,6 +9,7 @@ import { D3fcSeriesVisualizer } from './visualizers/d3fc-series';
 import { HeatmapVisualizer } from './visualizers/heatmap';
 import { SmallMultiplesVisualizer } from './visualizers/small-multiples';
 import QuickSettings, { AnyModel, QuickSettingsPanel } from 'quicksettings';
+import { UPlotVisualizer } from './visualizers/uplot-visualizer';
 
 function makeMenu() {
   let menu: QuickSettingsPanel<AnyModel, string> | undefined = undefined;
@@ -37,6 +38,8 @@ window.onload = async () => {
     'position:fixed;top:5px;right:5px;opacity:0.9;z-index:10000';
   stats.showPanel(0);
   document.body.appendChild(stats.dom);
+
+  const uplotVis = new UPlotVisualizer();
 
   const dl = await (await MNISTDataset.create()).testDataset
     .batch(100)
@@ -95,7 +98,7 @@ window.onload = async () => {
 
   async function animate() {
     stats.begin();
-    main();
+    // main();
     stats.end();
 
     requestAnimationFrame(animate);
