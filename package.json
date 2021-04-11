@@ -25,9 +25,9 @@
     "@types/debounce": "^1.2.0",
     "@types/quicksettings": "^3.0.0",
     "@types/stats.js": "^0.17.0",
+    "css-loader": "^5.2.1",
     "eslint": "^7.22.0",
     "html-webpack-plugin": "^5.3.1",
-    "css-loader": "^5.2.1",
     "style-loader": "^2.0.0",
     "ts-loader": "^8.0.18",
     "typescript": "^4.2.3",
@@ -38,6 +38,7 @@
   "dependencies": {
     "@d3fc/d3fc-axis": "^3.0.5",
     "@d3fc/d3fc-series": "^6.0.4",
+    "@types/seedrandom": "^2.4.28",
     "color-interpolate": "^1.0.5",
     "colormap": "^2.3.2",
     "d3": "^6.6.1",
@@ -45,6 +46,7 @@
     "debounce": "^1.2.1",
     "quicksettings": "^3.0.1",
     "regl": "^2.1.0",
+    "seedrandom": "^3.0.5",
     "stats.js": "^0.17.0",
     "tfjs-data-mnist": "^0.2.0",
     "uplot": "^1.6.8"
