@@ -67,8 +67,10 @@ export class SmallMultiplesVisualizer<T> extends TensorVisualizer<Config> {
         node.style.gridGap = `${dimGaps[i]}px`;
         if (dimDirections[i] == 'horizontal') {
           node.style.gridTemplateColumns = `repeat(${dim}, auto)`;
+          node.style.gridTemplateRows = '';
         } else {
           node.style.gridTemplateRows = `repeat(${dim}, auto)`;
+          node.style.gridTemplateColumns = '';
         }
 
         range(dim).forEach(_ => {

@@ -85,11 +85,6 @@ function createDefaultTensorVisUI(x: number, y: number) {
         update: (type: RenderType) => vis.setInternal({ renderer: type }),
       },
       {
-        type: 'drop-down',
-        values: ['canvas', 'svg', 'webgl'] as RenderType[],
-        update: (type: RenderType) => vis.setInternal({ renderer: type }),
-      },
-      {
         type: 'number',
         title: 'width',
         min: 100,
