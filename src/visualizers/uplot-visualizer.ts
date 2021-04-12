@@ -1,61 +1,71 @@
 import { Tensor, Rank } from '@tensorflow/tfjs-core';
 import { TensorVisualizer } from './tensor-visualizer';
+import { range } from 'src/utils';
 
 import uPlot from 'uplot';
 
 interface Config {}
 
 export class UPlotVisualizer extends TensorVisualizer<Config> {
+  private uplot!: uPlot;
+  private container: HTMLDivElement;
+
   constructor(config: Config = {}) {
     super(config);
 
     require('uplot/dist/uPlot.min.css'); // Inject CSS
+    this.container = document.createElement('div');
+  }
 
-    let data = [
-      [1546300800, 1546387200], // x-values (timestamps)
-      [35, 80], // y-values (series 1)
-      [90, 90], // y-values (series 2)
-    ];
+  protected build(config: Config): void {
+    const data = [[], []];
 
-    let opts = {
-      title: 'My Chart',
-      id: 'chart1',
-      class: 'my-chart',
-      width: 800,
-      height: 250,
+    const opts = {
+      width: 200,
+      height: 100,
+      pxAlign: false,
+      show: true,
+      cursor: {
+        show: false,
+      },
+      select: {
+        show: false,
+      },
+      legend: {
+        show: false,
+      },
+      scales: {
+        x: {
+          time: false,
+        },
+      },
+      axes: [
+        {
+          show: false,
+        },
+        {
+          show: true,
+        },
+      ],
       series: [
         {},
         {
-          // initial toggled state (optional)
-          show: true,
-
-          spanGaps: false,
-
-          // in-legend display
-          label: 'RAM',
-          value: (self: any, rawValue: any) => '$' + rawValue.toFixed(2),
-
-          // series style
-          stroke: 'red',
-          width: 1,
-          fill: 'rgba(255, 0, 0, 0.3)',
-          dash: [10, 5],
+          stroke: '#03a9f4',
+          fill: '#b3e5fc',
         },
       ],
     };
 
-    let uplot = new uPlot(opts, data as any, document.body);
-  }
-
-  protected build(config: Config): void {
-    throw new Error('Method not implemented.');
+    this.uplot = new uPlot(opts as any, data as any, this.container);
   }
 
   protected draw(tensor: Tensor<Rank>, config: Config): void {
-    throw new Error('Method not implemented.');
+    const yData = tensor.dataSync();
+    const data = [range(yData.length), yData];
+    this.uplot.setData(data as any);
   }
 
   public get domElement(): HTMLElement {
-    throw new Error('Method not implemented.');
+    return this.container;
   }
 }
