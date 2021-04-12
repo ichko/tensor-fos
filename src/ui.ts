@@ -25,15 +25,16 @@ function createDefaultTensorVisUI(x: number, y: number) {
   const vis = new SmallMultiplesVisualizer(
     { nDimsEntity: 2 },
     () =>
-      new D3fcSeriesVisualizer({
+      new UPlotVisualizer({
         renderer: 'canvas',
         type: 'heatmap',
-        width: 300,
-        height: 300,
+        width: 200,
+        height: 200,
       })
   );
 
   let shape: number[] = [2, 2, 32, 32];
+  let playAnim = false;
 
   const setTensor = () => {
     const t = tf.randomNormal(shape);
@@ -59,6 +60,11 @@ function createDefaultTensorVisUI(x: number, y: number) {
         type: 'button',
         title: 'randomize',
         update: setTensor,
+      },
+      {
+        type: 'button',
+        title: 'play/pause',
+        update: () => (playAnim = !playAnim),
       },
       {
         type: 'button',
@@ -89,7 +95,7 @@ function createDefaultTensorVisUI(x: number, y: number) {
         title: 'width',
         min: 100,
         max: 500,
-        initial: 300,
+        initial: 200,
         step: 1,
         update: (val: number) => vis.setInternal({ width: val }),
       },
@@ -98,7 +104,7 @@ function createDefaultTensorVisUI(x: number, y: number) {
         title: 'height',
         min: 100,
         max: 500,
-        initial: 300,
+        initial: 200,
         step: 1,
         update: (val: number) => vis.setInternal({ height: val }),
       },
@@ -114,6 +120,16 @@ function createDefaultTensorVisUI(x: number, y: number) {
 
   document.body.appendChild(ui.domElement);
   setTensor();
+
+  async function animate() {
+    if (playAnim) {
+      setTensor();
+    }
+
+    requestAnimationFrame(animate);
+  }
+
+  requestAnimationFrame(animate);
 }
 
 export function makeUI() {
@@ -121,7 +137,7 @@ export function makeUI() {
 
   const uplotVis = new UPlotVisualizer();
 
-  createDefaultTensorVisUI(20, 20);
+  createDefaultTensorVisUI(400, 20);
 
   window.document.body.ondblclick = (e: MouseEvent) => {
     if (e.target !== document.body) return;
