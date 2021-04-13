@@ -31,6 +31,7 @@ function createDefaultTensorVisUI(x: number, y: number, tensor: Variable) {
         type: 'heatmap',
         width: 200,
         height: 200,
+        crossIndex: 'consecutive',
       })
     // new UPlotVisualizer({
     //   renderer: 'canvas',
