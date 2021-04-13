@@ -10,6 +10,7 @@ import {
 } from './visualizers/d3fc-series';
 import { SmallMultiplesVisualizer } from './visualizers/small-multiples';
 import { UPlotVisualizer } from './visualizers/uplot-visualizer';
+import { Variable } from '@tensorflow/tfjs';
 
 export function makeStats() {
   const stats = new Stats();
@@ -21,25 +22,26 @@ export function makeStats() {
   return stats;
 }
 
-function createDefaultTensorVisUI(x: number, y: number) {
+function createDefaultTensorVisUI(x: number, y: number, tensor: Variable) {
   const vis = new SmallMultiplesVisualizer(
     { nDimsEntity: 2 },
     () =>
-      new UPlotVisualizer({
+      new D3fcSeriesVisualizer({
         renderer: 'canvas',
         type: 'heatmap',
         width: 200,
         height: 200,
       })
+    // new UPlotVisualizer({
+    //   renderer: 'canvas',
+    //   type: 'heatmap',
+    //   width: 200,
+    //   height: 200,
+    // })
   );
 
-  let shape: number[] = [2, 2, 32, 32];
+  let shape: number[] = tensor.shape;
   let playAnim = false;
-
-  const setTensor = () => {
-    const t = tf.randomNormal(shape);
-    vis.setTensor(t);
-  };
 
   const ui = new QuickSettingsWidgetUI({
     pos: { x, y },
@@ -49,7 +51,7 @@ function createDefaultTensorVisUI(x: number, y: number) {
       {
         type: 'text',
         title: 'shape',
-        initial: '2 2 32 32',
+        initial: shape.join(' '),
         update: val =>
           (shape = val
             .split(' ')
@@ -58,27 +60,13 @@ function createDefaultTensorVisUI(x: number, y: number) {
       },
       {
         type: 'button',
-        title: 'randomize',
-        update: setTensor,
+        title: 'update view',
+        update: () => vis.setTensor(tensor),
       },
       {
         type: 'button',
         title: 'play/pause',
         update: () => (playAnim = !playAnim),
-      },
-      {
-        type: 'button',
-        title: 'sin data',
-        update: () => {
-          const numUnits = [1, ...shape].reduce((a, b) => a * b);
-          const tensor = tf.sin(
-            tf
-              .range(0, numUnits, 1)
-              .div(shape.length * 100)
-              .reshape(shape)
-          );
-          vis.setTensor(tensor);
-        },
       },
       {
         type: 'drop-down',
@@ -119,11 +107,11 @@ function createDefaultTensorVisUI(x: number, y: number) {
   });
 
   document.body.appendChild(ui.domElement);
-  setTensor();
+  vis.setTensor(tensor);
 
   async function animate() {
     if (playAnim) {
-      setTensor();
+      vis.setTensor(tensor);
     }
 
     requestAnimationFrame(animate);
@@ -132,19 +120,50 @@ function createDefaultTensorVisUI(x: number, y: number) {
   requestAnimationFrame(animate);
 }
 
+const setRandom = (tensor: Variable) => {
+  const newValue = tf.randomNormal(tensor.shape);
+  tensor.assign(newValue);
+};
+
+const setSin = (tensor: Variable, t: number = 0) => {
+  const numUnits = [1, ...tensor.shape].reduce((a, b) => a * b);
+  const newValue = tf.sin(
+    tf
+      .range(0, numUnits, 1)
+      .div(tensor.shape.length * 100)
+      .add(t / 10)
+      .reshape(tensor.shape)
+  );
+
+  tensor.assign(newValue);
+};
+
 export function makeUI() {
   let menu: QuickSettingsPanel<AnyModel, string> | undefined = undefined;
 
-  const uplotVis = new UPlotVisualizer();
+  const shape = [2, 2, 32, 32];
+  const v = tf.variable(tf.ones(shape));
 
-  createDefaultTensorVisUI(400, 20);
+  let t = 0;
+
+  async function animate() {
+    t += 1;
+    setSin(v, t);
+    requestAnimationFrame(animate);
+  }
+  requestAnimationFrame(animate);
+
+  createDefaultTensorVisUI(400, 20, v);
 
   window.document.body.ondblclick = (e: MouseEvent) => {
     if (e.target !== document.body) return;
 
     menu = QuickSettings.create(e.clientX, e.clientY, 'Menu');
     menu.addButton('Create Normal Tensor', () => {
-      createDefaultTensorVisUI(e.clientX - 300, e.clientY - 500);
+      const shape = [2, 2, 32, 32];
+      const v = tf.variable(tf.ones(shape));
+
+      createDefaultTensorVisUI(e.clientX - 300, e.clientY - 500, v);
     });
   };
 
