@@ -22,7 +22,7 @@
     "paths": {
       // TODO: Fix paths
       "src/*": ["src/*"],
-      "visualizers/*": ["src/visualizers/*"],
+      "renderers/*": ["src/tensor-renderer/*"],
       "*": ["node_modules/*"]
     },
     "strict": true,

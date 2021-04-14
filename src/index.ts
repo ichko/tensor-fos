@@ -1,11 +1,10 @@
 import * as tf from '@tensorflow/tfjs';
-import { MNISTDataset } from 'tfjs-data-mnist';
 
 import { makeUI, makeStats } from './ui';
 
 window.onload = async () => {
-  makeUI();
   tf.backend(); // Register backend
+  makeUI();
 
   const stats = makeStats();
 

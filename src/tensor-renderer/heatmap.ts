@@ -1,7 +1,7 @@
 import * as d3 from 'd3';
 import * as tf from '@tensorflow/tfjs';
 import { minMaxNormalize, range, viridis } from 'src/utils';
-import { TensorVisualizer } from './tensor-visualizer';
+import { BaseRenderer } from './base-renderer';
 
 export type Direction = 'horizontal' | 'vertical';
 
@@ -12,7 +12,7 @@ interface Config {
   pixelSize: number;
 }
 
-export class HeatmapVisualizer extends TensorVisualizer<Config> {
+export class HeatmapRenderer extends BaseRenderer<Config> {
   private canvas: HTMLCanvasElement;
 
   private context!: CanvasRenderingContext2D;

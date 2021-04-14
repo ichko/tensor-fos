@@ -1,7 +1,7 @@
-import { Tensor } from '@tensorflow/tfjs-core';
+import { Tensor, Variable } from '@tensorflow/tfjs-core';
 import { arraysEqual } from 'src/utils';
 
-export abstract class TensorVisualizer<Config> {
+export abstract class BaseRenderer<Config> {
   private lastTensor?: Tensor;
 
   public get tensor(): Tensor | undefined {
@@ -50,5 +50,16 @@ export abstract class TensorVisualizer<Config> {
       this.build(this.config);
       this.draw(this.lastTensor, this.config);
     }
+  }
+
+  bind(variable: Variable) {
+    const originalAssign = variable.assign.bind(variable);
+
+    variable.assign = (tensor: Tensor) => {
+      originalAssign(tensor);
+      this.setTensor(tensor);
+    };
+
+    return variable;
   }
 }

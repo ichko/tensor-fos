@@ -4,12 +4,11 @@ import QuickSettings, { AnyModel, QuickSettingsPanel } from 'quicksettings';
 import Stats from 'stats.js';
 import { QuickSettingsWidgetUI } from './widget-ui';
 import {
-  D3fcSeriesVisualizer,
-  SeriesType,
-  RenderType,
-} from './visualizers/d3fc-series';
-import { SmallMultiplesVisualizer } from './visualizers/small-multiples';
-import { UPlotVisualizer } from './visualizers/uplot-visualizer';
+  D3fcSeriesRenderer,
+  D3fcSeriesType,
+  D3fcRenderType,
+} from './tensor-renderer/d3fc-series';
+import { SmallMultiplesRenderer } from './tensor-renderer/small-multiples';
 import { Variable } from '@tensorflow/tfjs';
 
 export function makeStats() {
@@ -23,10 +22,10 @@ export function makeStats() {
 }
 
 function createDefaultTensorVisUI(x: number, y: number, tensor: Variable) {
-  const vis = new SmallMultiplesVisualizer(
+  const vis = new SmallMultiplesRenderer(
     { nDimsEntity: 2 },
     () =>
-      new D3fcSeriesVisualizer({
+      new D3fcSeriesRenderer({
         renderer: 'canvas',
         type: 'heatmap',
         width: 200,
@@ -71,13 +70,13 @@ function createDefaultTensorVisUI(x: number, y: number, tensor: Variable) {
       },
       {
         type: 'drop-down',
-        values: ['heatmap', 'area', 'bar', 'line', 'point'] as SeriesType[],
-        update: (type: SeriesType) => vis.setInternal({ type: type }),
+        values: ['heatmap', 'area', 'bar', 'line', 'point'] as D3fcSeriesType[],
+        update: (type: D3fcSeriesType) => vis.setInternal({ type: type }),
       },
       {
         type: 'drop-down',
-        values: ['canvas', 'svg', 'webgl'] as RenderType[],
-        update: (type: RenderType) => vis.setInternal({ renderer: type }),
+        values: ['canvas', 'svg', 'webgl'] as D3fcRenderType[],
+        update: (type: D3fcRenderType) => vis.setInternal({ renderer: type }),
       },
       {
         type: 'number',
@@ -127,16 +126,18 @@ const setRandom = (tensor: Variable) => {
 };
 
 const setSin = (tensor: Variable, t: number = 0) => {
-  const numUnits = [1, ...tensor.shape].reduce((a, b) => a * b);
-  const newValue = tf.sin(
-    tf
-      .range(0, numUnits, 1)
-      .div(tensor.shape.length * 100)
-      .add(t / 10)
-      .reshape(tensor.shape)
-  );
+  tf.tidy(() => {
+    const numUnits = [1, ...tensor.shape].reduce((a, b) => a * b);
+    const newValue = tf.sin(
+      tf
+        .range(0, numUnits, 1)
+        .div(tensor.shape.length * 100)
+        .add(t / 10)
+        .reshape(tensor.shape)
+    );
 
-  tensor.assign(newValue);
+    tensor.assign(newValue);
+  });
 };
 
 export function makeUI() {

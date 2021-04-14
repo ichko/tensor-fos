@@ -1,6 +1,6 @@
 import { Tensor } from '@tensorflow/tfjs-core';
 import { range } from 'src/utils';
-import { TensorVisualizer } from './tensor-visualizer';
+import { BaseRenderer } from './base-renderer';
 
 export const defaultDimDirection = (dimDirections: Direction[], ndim: number) =>
   dimDirections.length > 0
@@ -25,12 +25,12 @@ interface Config {
   dimDirections?: Direction[];
 }
 
-export class SmallMultiplesVisualizer<T> extends TensorVisualizer<Config> {
+export class SmallMultiplesRenderer<T> extends BaseRenderer<Config> {
   private container: HTMLDivElement;
-  private entityVisCtor: () => TensorVisualizer<T>;
-  private visInstances: TensorVisualizer<T>[] = [];
+  private entityVisCtor: () => BaseRenderer<T>;
+  private visInstances: BaseRenderer<T>[] = [];
 
-  constructor(config: Config, entityVisCtor: () => TensorVisualizer<T>) {
+  constructor(config: Config, entityVisCtor: () => BaseRenderer<T>) {
     super(config);
     this.container = document.createElement('div');
     this.entityVisCtor = entityVisCtor;

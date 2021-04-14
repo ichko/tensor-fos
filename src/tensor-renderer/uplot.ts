@@ -1,12 +1,12 @@
 import { Tensor, Rank } from '@tensorflow/tfjs-core';
-import { TensorVisualizer } from './tensor-visualizer';
+import { BaseRenderer } from './base-renderer';
 import { range } from 'src/utils';
 
 import uPlot from 'uplot';
 
 interface Config {}
 
-export class UPlotVisualizer extends TensorVisualizer<Config> {
+export class UPlotRenderer extends BaseRenderer<Config> {
   private uplot!: uPlot;
   private container: HTMLDivElement;
 

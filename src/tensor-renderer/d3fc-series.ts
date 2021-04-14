@@ -1,13 +1,13 @@
 import { Tensor } from '@tensorflow/tfjs-core';
-import { TensorVisualizer } from './tensor-visualizer';
+import { BaseRenderer } from './base-renderer';
 import * as d3 from 'd3';
 import * as fc from 'd3fc';
 import * as fcs from '@d3fc/d3fc-series';
 import { capitalize } from 'src/utils';
 
-export type SeriesType = 'line' | 'point' | 'area' | 'bar' | 'heatmap';
+export type D3fcSeriesType = 'line' | 'point' | 'area' | 'bar' | 'heatmap';
 
-export type RenderType = 'webgl' | 'canvas' | 'svg';
+export type D3fcRenderType = 'webgl' | 'canvas' | 'svg';
 
 type CrossIndex = 'infer' | 'consecutive' | 'from-tensor';
 interface Style {
@@ -17,8 +17,8 @@ interface Style {
 }
 
 interface Config {
-  type: SeriesType;
-  renderer: RenderType;
+  type: D3fcSeriesType;
+  renderer: D3fcRenderType;
   style?: Style;
   width?: number;
   height?: number;
@@ -36,7 +36,7 @@ style.innerHTML = `
 
 document.body.appendChild(style);
 
-function getSeriesInstance(type: SeriesType, renderer: RenderType) {
+function getSeriesInstance(type: D3fcSeriesType, renderer: D3fcRenderType) {
   // TODO: This is just a hack. Remove after d3fc provide types.
   interface Indexable {
     [name: string]: any;
@@ -64,7 +64,7 @@ function getSeriesInstance(type: SeriesType, renderer: RenderType) {
 }
 
 function styleSeries(
-  type: SeriesType,
+  type: D3fcSeriesType,
   series: any,
   { color = 'black', orient = 'vertical', size = 1 }: Style
 ): any {
@@ -96,7 +96,7 @@ function styleSeries(
 function buildChart(
   xScale: d3.ScaleLinear<number, number, never>,
   yScale: d3.ScaleLinear<number, number, never>,
-  renderer: RenderType,
+  renderer: D3fcRenderType,
   series: any,
   showAxis: boolean
 ) {
@@ -135,7 +135,7 @@ function buildChart(
   return chart;
 }
 
-export class D3fcSeriesVisualizer extends TensorVisualizer<Config> {
+export class D3fcSeriesRenderer extends BaseRenderer<Config> {
   private container: HTMLElement;
   private chart: any;
   private selection!: d3.Selection<HTMLElement, unknown, null, undefined>;
