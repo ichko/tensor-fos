@@ -11,3 +11,4 @@
 - [WebGL-WebGPU-frameworks-libraries.md](https://gist.github.com/dmnsgn/76878ba6903cf15789b712464875cfdc)
 - [Custom WebGL Operation in TensorFlow.js](https://www.lewuathe.com/custome-webgl-operation-in-tensorflow.js.html)
 - [TensorFlow.js: Digit Recognizer with Layers ](https://storage.googleapis.com/tfjs-examples/mnist/dist/index.html)
+- <https://betterprogramming.pub/implementation-of-zoom-and-pan-in-69-lines-of-javascript-8b0cb5f221c1>

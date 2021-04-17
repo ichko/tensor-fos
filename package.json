@@ -50,6 +50,7 @@
     "seedrandom": "^3.0.5",
     "stats.js": "^0.17.0",
     "tfjs-data-mnist": "^0.2.0",
-    "uplot": "^1.6.8"
+    "uplot": "^1.6.8",
+    "zoom-pan": "github:kwdowik/zoom-pan"
   }
 }

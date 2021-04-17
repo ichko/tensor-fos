@@ -9,6 +9,11 @@ module.exports = {
   devtool: 'inline-source-map',
   module: {
     rules: [{
+        test: /\.worker\.ts$/,
+        use: {
+          loader: "worker-loader"
+        },
+      }, {
         test: /\.tsx?$/,
         use: 'ts-loader',
         exclude: /node_modules/,
@@ -43,12 +48,14 @@ module.exports = {
       templateContent: `
       <html>
         <body>
+          <div id="rete"></div>
         </body>
       </html>
     `
     }),
   ],
   optimization: {
+    // usedExports: true,
     // 'https://medium.com/hackernoon/the-100-correct-way-to-split-your-chunks-with-webpack-f8a9df5b7758',
     runtimeChunk: 'single',
     splitChunks: {
