@@ -55,17 +55,10 @@ class Node {
     this.container = document.createElement('div');
 
     applyCSS(this.container, {
-      width: '200px',
-      height: '200px',
       border: '1px solid black',
-      padding: '30px',
+      padding: '10px',
       position: 'absolute',
       boxSizing: 'border-box',
-    });
-
-    ondrag(this.container, ({ dx, dy }) => {
-      this.container.style.top = this.container.offsetTop - dy + 'px';
-      this.container.style.left = this.container.offsetLeft - dx + 'px';
     });
   }
 }
@@ -74,6 +67,7 @@ export class Editor {
   public container: HTMLDivElement;
   private nodes: Node[] = [];
   private coordSystem: HTMLDivElement;
+  scale: number;
 
   constructor() {
     this.container = document.createElement('div');
@@ -86,8 +80,7 @@ export class Editor {
       border: '1px solid black',
       overflow: 'hidden',
       position: 'relative',
-      opacity: '0.4',
-      backgroundImage: 'radial-gradient(#999 1px, white 1px)',
+      backgroundImage: 'radial-gradient(#ccc 1px, white 1px)',
       backgroundSize: '20px 20px',
     });
 
@@ -98,18 +91,19 @@ export class Editor {
       scaleSensitivity: 10,
     });
 
+    this.scale = 1;
+
     const setBackground = () => {
       const transform = this.coordSystem.style.transform;
       const val1 = transform.split('(')[1];
       const val2 = val1.slice(0, val1.length - 1);
       const [s, _z1, _z2, _s, x, y] = val2.split(', ').map(v => +v);
+      this.scale = s;
 
       applyCSS(this.container, {
         backgroundPosition: `${x}px ${y}px`,
         backgroundSize: `${s * 20}px ${s * 20}px`,
       });
-
-      console.log(s);
     };
 
     ondrag(this.container, ({ dx, dy, x, y }) => {
@@ -130,8 +124,9 @@ export class Editor {
     };
   }
 
-  addNode(content: string | HTMLElement) {
+  addNode(content: string | HTMLElement, inputs: string[] = []) {
     const newNode = new Node();
+
     this.nodes.push(newNode);
     this.coordSystem.appendChild(newNode.container);
 
@@ -140,5 +135,29 @@ export class Editor {
     } else {
       newNode.container.innerText = content;
     }
+
+    ondrag(newNode.container, ({ x, y }) => {
+      newNode.container.style.top = `${x}px`;
+      newNode.container.style.left = `${y}px`;
+      console.log(newNode.container.style.top);
+    });
+
+    const inps = d3.select(newNode.container).selectAll('div');
+
+    inps
+      .data(inputs)
+      .enter()
+      .append('div')
+      .classed('input', true)
+      .style('width', '16px')
+      .style('height', '16px')
+      .style('background', 'red')
+      .style('position', 'absolute')
+      .style('left', '-8px')
+      .style('top', (d: string, i: number) => `${-1 + i * 20}px`)
+      // .text('test')
+      .on('drag', e => {
+        console.log(e);
+      });
   }
 }
