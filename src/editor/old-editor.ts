@@ -67,61 +67,49 @@ export class Editor {
   public container: HTMLDivElement;
   private nodes: Node[] = [];
   private coordSystem: HTMLDivElement;
-  scale: number;
+  private scale: number;
 
   constructor() {
     this.container = document.createElement('div');
     this.coordSystem = document.createElement('div');
     this.container.appendChild(this.coordSystem);
 
+    const bgSize = 30;
     applyCSS(this.container, {
       width: '800px',
       height: '800px',
       border: '1px solid black',
       overflow: 'hidden',
       position: 'relative',
-      backgroundImage: 'radial-gradient(#ccc 1px, white 1px)',
-      backgroundSize: '20px 20px',
+      backgroundImage: 'radial-gradient(#e3e3e3 1px, white 2px)',
+      backgroundSize: `${bgSize}px ${bgSize}px`,
     });
 
-    const instance = renderer({
-      minScale: 0.1,
-      maxScale: 30,
-      element: this.coordSystem,
-      scaleSensitivity: 10,
-    });
-
+    const d3CoordSystem = d3.select(this.coordSystem);
+    const d3Container = d3.select(this.container);
     this.scale = 1;
 
-    const setBackground = () => {
-      const transform = this.coordSystem.style.transform;
-      const val1 = transform.split('(')[1];
-      const val2 = val1.slice(0, val1.length - 1);
-      const [s, _z1, _z2, _s, x, y] = val2.split(', ').map(v => +v);
-      this.scale = s;
+    const zoomed = (e: any) => {
+      const trans = e.transform;
+      this.scale = trans.k;
 
-      applyCSS(this.container, {
-        backgroundPosition: `${x}px ${y}px`,
-        backgroundSize: `${s * 20}px ${s * 20}px`,
-      });
+      d3CoordSystem.style(
+        'transform',
+        `translate(${trans.x}px, ${trans.y}px) scale(${trans.k})`
+      );
+      d3Container
+        .style('background-position', `${trans.x}px ${trans.y}px`)
+        .style(
+          'background-size',
+          `${trans.k * bgSize}px ${trans.k * bgSize}px`
+        );
     };
 
-    ondrag(this.container, ({ dx, dy, x, y }) => {
-      instance.panBy({
-        originX: -dx,
-        originY: -dy,
-      });
-      setBackground();
-    });
+    const zoom = d3.zoom().scaleExtent([0.1, 10]).on('zoom', zoomed);
 
-    this.container.onwheel = (e: WheelEvent) => {
-      instance.zoom({
-        deltaScale: Math.sign(e.deltaY) > 0 ? -1 : 1,
-        x: e.pageX,
-        y: e.pageY,
-      });
-      setBackground();
-    };
+    d3Container.call(zoom as any);
+
+    d3CoordSystem.style('transform-origin', '0 0');
   }
 
   addNode(content: string | HTMLElement, inputs: string[] = []) {
@@ -136,12 +124,6 @@ export class Editor {
       newNode.container.innerText = content;
     }
 
-    ondrag(newNode.container, ({ x, y }) => {
-      newNode.container.style.top = `${x}px`;
-      newNode.container.style.left = `${y}px`;
-      console.log(newNode.container.style.top);
-    });
-
     const inps = d3.select(newNode.container).selectAll('div');
 
     inps
@@ -154,10 +136,21 @@ export class Editor {
       .style('background', 'red')
       .style('position', 'absolute')
       .style('left', '-8px')
-      .style('top', (d: string, i: number) => `${-1 + i * 20}px`)
-      // .text('test')
-      .on('drag', e => {
-        console.log(e);
-      });
+      .style('top', (d: string, i: number) => `${-1 + i * 20}px`);
+
+    var drag = d3
+      .drag()
+      .subject(d => d)
+      .on('drag', dragged);
+
+    d3.select(newNode.container).call(drag as any);
+
+    const $this = this;
+    function dragged(this: any, d: any) {
+      console.log(d);
+      const x = d.x / $this.scale;
+      const y = d.y / $this.scale;
+      d3.select(this).style('left', `${x}px`).style('top', `${y}px`);
+    }
   }
 }
