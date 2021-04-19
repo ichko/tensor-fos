@@ -14,7 +14,7 @@ module.exports = {
           loader: "worker-loader"
         },
       }, {
-        test: /\.tsx?$/,
+        test: /\.(tsx?|jsx)$/,
         use: 'ts-loader',
         exclude: /node_modules/,
       },
@@ -26,7 +26,7 @@ module.exports = {
   },
   resolve: {
     modules: [path.resolve('.'), path.resolve('./node_modules')],
-    extensions: ['.tsx', '.ts', '.js'],
+    extensions: ['jsx', '.tsx', '.ts', '.js'],
   },
   output: {
     path: path.resolve(__dirname, 'dist'),
