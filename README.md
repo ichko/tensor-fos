@@ -12,3 +12,4 @@
 - [Custom WebGL Operation in TensorFlow.js](https://www.lewuathe.com/custome-webgl-operation-in-tensorflow.js.html)
 - [TensorFlow.js: Digit Recognizer with Layers ](https://storage.googleapis.com/tfjs-examples/mnist/dist/index.html)
 - <https://betterprogramming.pub/implementation-of-zoom-and-pan-in-69-lines-of-javascript-8b0cb5f221c1>
+- <https://bl.ocks.org/ngminhtrung/7c5721a1504f3e29a36da9ddd9e5039b>
