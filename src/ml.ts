@@ -3,7 +3,15 @@ import { SymbolicTensor } from '@tensorflow/tfjs';
 import mnist from 'mnist';
 
 export function loadMnist() {
-  console.log(mnist);
+  const set = mnist.set(60000, 10000);
+
+  const trainingSet = set.training;
+  const testSet = set.test;
+  const example = trainingSet[0].input;
+  const tensor = tf.tensor(example).reshape([28, 28]);
+
+  tensor.print();
+  console.log({ tensor });
 }
 
 export function exampleVAE() {
