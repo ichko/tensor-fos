@@ -49,6 +49,7 @@
     "d3fc": "^15.1.2",
     "debounce": "^1.2.1",
     "flume": "^0.6.3",
+    "mnist": "^1.1.0",
     "quicksettings": "^3.0.1",
     "react": "^16.14.0",
     "react-dom": "^16.14.0",

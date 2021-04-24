@@ -155,7 +155,7 @@ export function makeUI() {
   }
   requestAnimationFrame(animate);
 
-  createDefaultTensorVisUI(400, 20, v);
+  // createDefaultTensorVisUI(400, 20, v);
 
   window.document.body.ondblclick = (e: MouseEvent) => {
     if (e.target !== document.body) return;

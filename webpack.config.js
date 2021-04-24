@@ -42,6 +42,11 @@ module.exports = {
     compress: true,
     port: 8080,
   },
+  externalsType: 'script',
+  externals: {
+    // TODO: try loading mnist from node_modules
+    mnist: ['https://unpkg.com/mnist@1.1.0/dist/mnist.js', 'mnist'],
+  },
   plugins: [
     new HtmlWebpackPlugin({
       title: 'TensorFos',
