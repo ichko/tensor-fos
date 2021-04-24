@@ -3,6 +3,7 @@
 import * as tf from '@tensorflow/tfjs';
 import { makeUI, makeStats } from './ui';
 import { Editor } from './editor';
+import { exampleVAE } from './ml';
 
 window.onload = async () => {
   const editor = new Editor();
@@ -11,6 +12,7 @@ window.onload = async () => {
   tf.backend(); // Register backenad
   makeUI();
 
+  exampleVAE();
   const stats = makeStats();
 
   let t = 0;
