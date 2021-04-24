@@ -69,7 +69,14 @@ export const FlumeEditorComponent = ({ provideRef }: Props) => {
   });
 
   return (
-    <div style={{ width: 800, height: 800 }}>
+    <div
+      style={{
+        width: 1400,
+        height: 900,
+        border: '2px solid black',
+        margin: '0 auto',
+      }}
+    >
       <NodeEditor
         nodeTypes={flumeConfig.nodeTypes}
         portTypes={flumeConfig.portTypes}
@@ -86,7 +93,69 @@ export const FlumeEditorComponent = ({ provideRef }: Props) => {
   );
 };
 
+function injectCSS() {
+  const css = `
+    .Stage_wrapper__1X5K_ {
+      background-color: grey;
+      background-image: linear-gradient(
+        0deg,
+        transparent 24%,
+        rgba(0, 0, 0, 0.2) 25%,
+        rgba(0, 0, 0, 0.2) 26%,
+        transparent 27%,
+        transparent 74%,
+        rgba(0, 0, 0, 0.2) 75%,
+        rgba(0, 0, 0, 0.2) 76%,
+        transparent 77%,
+        transparent
+      ),
+      linear-gradient(
+        90deg,
+        transparent 24%,
+        rgba(0, 0, 0, 0.2) 25%,
+        rgba(0, 0, 0, 0.2) 26%,
+        transparent 27%,
+        transparent 74%,
+        rgba(0, 0, 0, 0.2) 75%,
+        rgba(0, 0, 0, 0.2) 76%,
+        transparent 77%,
+        transparent
+      );
+    }
+
+    .Stage_wrapper__1X5K_ textarea {
+      background: white;
+      border-color: #ccc;
+    }
+
+    .Node_wrapper__3SmT7 {
+      background: white;
+    }
+
+    .Node_label__3MmhF {
+      background: white;
+    }
+
+    .Select_selectedWrapper__SUs4D {
+      background: white;
+      border-color: #ccc;
+    }
+  `;
+
+  const container = document.createElement('style');
+  container.innerText = css;
+
+  document.body.appendChild(container);
+}
+
+let cssAlreadyInjected = false;
+
 export const editorInstance = () => {
+  if (!cssAlreadyInjected) {
+    injectCSS();
+    cssAlreadyInjected = true;
+  }
+
   const container = document.createElement('div');
   let localRef: any = undefined;
 
