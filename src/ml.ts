@@ -1,20 +1,33 @@
 import * as tf from '@tensorflow/tfjs';
-import { SymbolicTensor } from '@tensorflow/tfjs';
-import mnist from 'mnist';
+import { SymbolicTensor, Tensor } from '@tensorflow/tfjs';
+import * as mnist from 'mnist';
 
-export function loadMnist() {
-  const set = mnist.set(60000, 10000);
+const set = mnist.set(60000, 10000);
 
-  const trainingSet = set.training;
-  const testSet = set.test;
-  const example = trainingSet[0].input;
-  const tensor = tf.tensor(example).reshape([28, 28]);
+export const data = {
+  loadMnist: () => {
+    const trainDataset = tf.data.array(set.training);
+    const testDataset = tf.data.array(set.test);
 
-  tensor.print();
-  console.log({ tensor });
-}
+    return ({ bs, shuffle = false }: { bs: number; shuffle?: boolean }) => {
+      let ds = trainDataset;
+      if (shuffle) {
+        ds = ds.shuffle(128, 'seed');
+      }
+      ds = ds.batch(bs);
+      ds = ds.map((item: any) => {
+        return {
+          x: item.input.reshape([-1, 28, 28]) as Tensor,
+          y: item.output as Tensor,
+        };
+      });
 
-export function exampleVAE() {
+      return ds as tf.data.Dataset<{ x: Tensor; y: Tensor }>;
+    };
+  },
+};
+
+export async function exampleVAE() {
   function makeModel() {
     const input1 = tf.input({ shape: [10] });
     const input2 = tf.input({ shape: [20] });
@@ -38,5 +51,10 @@ export function exampleVAE() {
 
   const model = makeModel();
   model.summary();
-  const data = loadMnist();
+
+  const mnist = data.loadMnist();
+  const trainDataset = await mnist({ bs: 8 }).iterator();
+  const batch = await trainDataset.next();
+
+  console.log({ batch });
 }
