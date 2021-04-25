@@ -191,18 +191,15 @@ export class D3fcSeriesRenderer extends BaseRenderer<Config> {
       );
 
       const crossIndex = (_d: number, i: number) => i % width;
-      const mainIndex = (_d: number, i: number) => Math.floor(i / width);
+      const mainIndex = (_d: number, i: number) => -Math.floor(i / width);
 
       const xExtent = fc
         .extentLinear()
         .accessors([crossIndex])
         .pad([0, 0])
         .include([-0.5, width - 0.5]);
-      const yExtent = fc
-        .extentLinear()
-        .accessors([mainIndex])
-        .pad([0, 0])
-        .include([-0.5, height - 0.5]);
+      const yExtent = fc.extentLinear().accessors([mainIndex]).pad([0, 0]);
+      // .include([height - 0.5, -0.5]);
 
       this.xScale.range([0, width]);
       this.yScale.range([height, 0]);

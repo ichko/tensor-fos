@@ -11,7 +11,7 @@
     "isolatedModules": true,
     "skipLibCheck": true,
     "moduleResolution": "node",
-    "module": "es2020",
+    "module": "es6",
     // "noImplicitAny": true,
     // "noEmit": true,
     // "noFallthroughCasesInSwitch": true,
