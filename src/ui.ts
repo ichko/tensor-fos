@@ -9,7 +9,8 @@ import {
   D3fcRenderType,
 } from './tensor-renderer/d3fc-series';
 import { SmallMultiplesRenderer } from './tensor-renderer/small-multiples';
-import { Variable } from '@tensorflow/tfjs';
+import { reshape, Variable } from '@tensorflow/tfjs';
+import * as ml from './ml';
 
 export function makeStats() {
   const stats = new Stats();
@@ -28,8 +29,8 @@ function createDefaultTensorVisUI(x: number, y: number, tensor: Variable) {
       new D3fcSeriesRenderer({
         renderer: 'canvas',
         type: 'heatmap',
-        width: 200,
-        height: 200,
+        width: 100,
+        height: 100,
         crossIndex: 'consecutive',
       })
     // new UPlotVisualizer({
@@ -161,11 +162,13 @@ export function makeUI() {
     if (e.target !== document.body) return;
 
     menu = QuickSettings.create(e.clientX, e.clientY, 'Menu');
-    menu.addButton('Create Normal Tensor', () => {
-      const shape = [2, 2, 32, 32];
-      const v = tf.variable(tf.ones(shape));
+    menu.addButton('Create Normal Tensor', async () => {
+      const mnist = ml.data.loadMnist();
+      const trainDataset = await mnist({ bs: 16 }).iterator();
+      const batch = await trainDataset.next();
+      const reshaped = batch.value.x.reshape([4, 4, 28, 28]);
 
-      createDefaultTensorVisUI(e.clientX - 300, e.clientY - 500, v);
+      createDefaultTensorVisUI(e.clientX - 300, e.clientY - 500, reshaped);
     });
   };
 
