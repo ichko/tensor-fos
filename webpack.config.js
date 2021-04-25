@@ -37,10 +37,15 @@ module.exports = {
     ignored: '**/node_modules',
   },
   devServer: {
+    open: false,
     contentBase: path.join(__dirname, 'dist'),
     hot: true,
     compress: true,
     port: 8080,
+    overlay: {
+      warnings: true,
+      errors: true,
+    },
   },
   externalsType: 'script',
   externals: {
