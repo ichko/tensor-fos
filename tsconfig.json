@@ -11,7 +11,7 @@
     "isolatedModules": true,
     "skipLibCheck": true,
     "moduleResolution": "node",
-    "module": "es6",
+    "module": "es2020",
     // "noImplicitAny": true,
     // "noEmit": true,
     // "noFallthroughCasesInSwitch": true,
@@ -30,5 +30,17 @@
     "target": "es5"
     // "types": []
   },
-  "exclude": []
+  "exclude": [
+    ".git",
+    ".app-cache",
+    ".npm",
+    ".npm-tmp",
+    "dist",
+    "dist*",
+    "node_modules",
+    "subfolder/dist",
+    "subfolder/node_modules",
+    "**/dist/*",
+    "**/node_modules/*"
+  ]
 }
