@@ -89,6 +89,9 @@ export const FlumeEditorComponent = ({ provideRef }: Props) => {
           },
         ]}
       />
+      {
+        ' ' // TODO: This started breaking at some point and I had to 'fix' it (not sure why ths works)
+      }
     </div>
   );
 };
@@ -167,7 +170,8 @@ export const editorInstance = () => {
     />
   );
 
-  ReactDOM.render(flumeInstance, container);
+  // TODO: This need 'as any' for some reason?
+  ReactDOM.render(flumeInstance as any, container);
 
   return {
     dom: container.firstChild! as HTMLElement,
