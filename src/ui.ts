@@ -8,6 +8,7 @@ import {
   D3fcSeriesType,
   D3fcRenderType,
 } from './tensor-renderer/d3fc-series';
+import { TfJsVisRenderer } from './tensor-renderer/tfjs-vis-renderert';
 import { SmallMultiplesRenderer } from './tensor-renderer/small-multiples';
 import { reshape, Variable } from '@tensorflow/tfjs';
 import * as ml from './ml';
@@ -25,14 +26,14 @@ export function makeStats() {
 function createDefaultTensorVisUI(x: number, y: number, tensor: Variable) {
   const vis = new SmallMultiplesRenderer(
     { nDimsEntity: 2 },
-    () =>
-      new D3fcSeriesRenderer({
-        renderer: 'canvas',
-        type: 'heatmap',
-        width: 100,
-        height: 100,
-        crossIndex: 'consecutive',
-      })
+    () => new TfJsVisRenderer({ type: 'barchart' })
+    // new D3fcSeriesRenderer({
+    //   renderer: 'canvas',
+    //   type: 'heatmap',
+    //   width: 100,
+    //   height: 100,
+    //   crossIndex: 'consecutive',
+    // })
     // new UPlotVisualizer({
     //   renderer: 'canvas',
     //   type: 'heatmap',
@@ -47,64 +48,7 @@ function createDefaultTensorVisUI(x: number, y: number, tensor: Variable) {
   const ui = new QuickSettingsWidgetUI({
     pos: { x, y },
     title: 'd3fc tensor',
-    widgets: [
-      { type: 'element', element: vis.domElement },
-      {
-        type: 'text',
-        title: 'shape',
-        initial: shape.join(' '),
-        update: val =>
-          (shape = val
-            .split(' ')
-            .map(v => +v)
-            .filter(v => v !== 0)),
-      },
-      {
-        type: 'button',
-        title: 'update view',
-        update: () => vis.setTensor(tensor),
-      },
-      {
-        type: 'button',
-        title: 'play/pause',
-        update: () => (playAnim = !playAnim),
-      },
-      {
-        type: 'drop-down',
-        values: ['heatmap', 'area', 'bar', 'line', 'point'] as D3fcSeriesType[],
-        update: (type: D3fcSeriesType) => vis.setInternal({ type: type }),
-      },
-      {
-        type: 'drop-down',
-        values: ['canvas', 'svg', 'webgl'] as D3fcRenderType[],
-        update: (type: D3fcRenderType) => vis.setInternal({ renderer: type }),
-      },
-      {
-        type: 'number',
-        title: 'width',
-        min: 100,
-        max: 500,
-        initial: 200,
-        step: 1,
-        update: (val: number) => vis.setInternal({ width: val }),
-      },
-      {
-        type: 'number',
-        title: 'height',
-        min: 100,
-        max: 500,
-        initial: 200,
-        step: 1,
-        update: (val: number) => vis.setInternal({ height: val }),
-      },
-      {
-        type: 'button',
-        title: 'delete',
-        update: () => {
-          ui.domElement.remove();
-        },
-      },
-    ],
+    widgets: [{ type: 'element', element: vis.domElement }],
   });
 
   document.body.appendChild(ui.domElement);
