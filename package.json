@@ -42,6 +42,7 @@
     "@d3fc/d3fc-series": "^6.0.4",
     "@tensorflow/tfjs": "^3.4.0",
     "@tensorflow/tfjs-data": "^3.4.0",
+    "@tensorflow/tfjs-vis": "^1.5.1",
     "@types/seedrandom": "^2.4.28",
     "color-interpolate": "^1.0.5",
     "colormap": "^2.3.2",
