@@ -36,7 +36,7 @@ export class SmallMultiplesRenderer<T> extends BaseRenderer<Config> {
     this.entityVisCtor = entityVisCtor;
   }
 
-  protected build({
+  protected async build({
     padding,
     dimDirections = [],
     dimGaps = [],
@@ -90,7 +90,7 @@ export class SmallMultiplesRenderer<T> extends BaseRenderer<Config> {
     });
   }
 
-  protected draw(tensor: Tensor): void {
+  protected async draw(tensor: Tensor) {
     const entityShape = tensor.shape.slice(
       tensor.shape.length - this.config.nDimsEntity,
       tensor.shape.length

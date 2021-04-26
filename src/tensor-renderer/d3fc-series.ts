@@ -149,7 +149,7 @@ export class D3fcSeriesRenderer extends BaseRenderer<Config> {
     this.container = document.createElement('div');
   }
 
-  protected build({
+  protected async build({
     renderer,
     style = {},
     width = 400,
@@ -157,7 +157,7 @@ export class D3fcSeriesRenderer extends BaseRenderer<Config> {
     type = 'line',
     crossIndex = 'infer',
     showAxis = true,
-  }: Config): void {
+  }: Config) {
     this.xScale = d3.scaleLinear();
     this.yScale = d3.scaleLinear();
 
@@ -180,7 +180,7 @@ export class D3fcSeriesRenderer extends BaseRenderer<Config> {
       .style('height', height + 'px');
   }
 
-  protected draw(tensor: Tensor): void {
+  protected async draw(tensor: Tensor) {
     const shape = tensor.shape;
     const data = tensor.dataSync();
 

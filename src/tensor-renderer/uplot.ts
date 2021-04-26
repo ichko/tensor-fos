@@ -17,7 +17,7 @@ export class UPlotRenderer extends BaseRenderer<Config> {
     this.container = document.createElement('div');
   }
 
-  protected build(config: Config): void {
+  protected async build(config: Config) {
     const data = [[], []];
 
     const opts = {
@@ -59,7 +59,7 @@ export class UPlotRenderer extends BaseRenderer<Config> {
     this.uplot = new uPlot(opts as any, data as any, this.container);
   }
 
-  protected draw(tensor: Tensor<Rank>, config: Config): void {
+  protected async draw(tensor: Tensor<Rank>, config: Config) {
     const yData = tensor.dataSync();
     const data = [range(yData.length), yData];
     this.uplot.setData(data as any);

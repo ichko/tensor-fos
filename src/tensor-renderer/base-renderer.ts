@@ -16,8 +16,8 @@ export abstract class BaseRenderer<Config> {
     return this.lastTensor?.shape.length || -1;
   }
 
-  protected abstract build(config: Config): void;
-  protected abstract draw(tensor: Tensor, config: Config): void;
+  protected abstract build(config: Config): Promise<void>;
+  protected abstract draw(tensor: Tensor, config: Config): Promise<void>;
 
   public constructor(protected config: Config) {}
   public abstract get domElement(): HTMLElement;

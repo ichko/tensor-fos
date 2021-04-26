@@ -27,7 +27,7 @@ export class HeatmapRenderer extends BaseRenderer<Config> {
     this.canvas = document.createElement('canvas');
   }
 
-  protected build({
+  protected async build({
     pixelSize,
     outerPadding,
     dimDirections = [],
@@ -86,7 +86,7 @@ export class HeatmapRenderer extends BaseRenderer<Config> {
     this.context = this.canvas.getContext('2d')!;
   }
 
-  protected draw(tensor: tf.Tensor): void {
+  protected async draw(tensor: tf.Tensor) {
     const data = minMaxNormalize(tensor).dataSync();
     const index = range(this.tensorShape.length).fill(0);
 
