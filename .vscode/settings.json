@@ -1,3 +1,4 @@
 {
-  "editor.cursorBlinking": "solid"
+  "editor.cursorBlinking": "solid",
+  "editor.fontSize": 14
 }
