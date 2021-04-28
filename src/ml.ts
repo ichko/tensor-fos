@@ -1,24 +1,34 @@
 import * as tf from '@tensorflow/tfjs';
-import { SymbolicTensor, Tensor } from '@tensorflow/tfjs';
+import { Optimizer, Scalar, Tensor } from '@tensorflow/tfjs';
+import { namespace } from 'd3-selection';
 import * as mnist from 'mnist';
 
 const set = mnist.set(60000, 10000);
 
+export abstract class BaseModel<Input, Output, Batch> {
+  abstract forward(x: Input): Output;
+
+  abstract loss(batch: Batch): Scalar;
+
+  abstract optimStep(batch: Batch): Promise<number>;
+}
+
 export const data = {
-  loadMnist: () => {
+  loadMnist: (shuffleBuffer = 128) => {
     const trainDataset = tf.data.array(set.training);
     const testDataset = tf.data.array(set.test);
 
     return ({ bs, shuffle = false }: { bs: number; shuffle?: boolean }) => {
       let ds = trainDataset;
+      ds = ds.repeat(-1);
       if (shuffle) {
-        ds = ds.shuffle(128, 'seed');
+        ds = ds.shuffle(shuffleBuffer, 'seed');
       }
       ds = ds.batch(bs);
       ds = ds.map((item: any) => {
         return {
           x: item.input.reshape([-1, 28, 28]) as Tensor,
-          y: item.output as Tensor,
+          y: item.output.cast('int32') as Tensor,
         };
       });
 
@@ -27,34 +37,78 @@ export const data = {
   },
 };
 
-export async function exampleVAE() {
-  function makeModel() {
-    const input1 = tf.input({ shape: [10] });
-    const input2 = tf.input({ shape: [20] });
-    const dense1 = tf.layers.dense({ units: 4 }).apply(input1);
-    const dense2 = tf.layers.dense({ units: 8 }).apply(input2);
-    const concat = tf.layers
-      .concatenate()
-      .apply([dense1, dense2] as SymbolicTensor[]);
-
-    const output = tf.layers
-      .dense({ units: 3, activation: 'softmax' })
-      .apply(concat);
-
-    const model = tf.model({
-      inputs: [input1, input2],
-      outputs: [output] as SymbolicTensor[],
-    });
-
-    return model;
+namespace VAE {
+  interface Batch {
+    x: Tensor;
+    y: Tensor;
   }
+  type Input = Tensor;
+  type Output = Tensor;
 
-  const model = makeModel();
-  model.summary();
+  const optimizer = tf.train.adam();
+
+  export class Model extends BaseModel<Input, Output, Batch> {
+    net: tf.LayersModel;
+
+    constructor() {
+      super();
+
+      const input = tf.input({ shape: [28, 28] });
+      let x: any = input;
+      x = tf.layers.flatten().apply(x);
+      x = tf.layers.dense({ units: 32, activation: 'relu' }).apply(x);
+      x = tf.layers.dense({ units: 10, activation: 'softmax' }).apply(x);
+
+      this.net = tf.model({ inputs: input, outputs: x });
+    }
+
+    loss({ x, y }: Batch): Scalar {
+      const y_hat = this.forward(x);
+      return tf.metrics.categoricalCrossentropy(y, y_hat).mean();
+    }
+
+    forward(x: Input): Output {
+      return this.net.apply(x) as Output;
+    }
+
+    async optimStep(batch: Batch) {
+      const returnCost = true;
+      return optimizer
+        .minimize(() => this.loss(batch), returnCost)
+        ?.dataSync()[0] as number;
+    }
+  }
+}
+
+export async function exampleVAE() {
+  tf.backend(); // Register backend
+  // tf.enableDebugMode();
+
+  const model = new VAE.Model();
+  model.net.summary();
 
   const mnist = data.loadMnist();
-  const trainDataset = await mnist({ bs: 8 }).iterator();
-  const batch = await trainDataset.next();
+  const trainDataset = await mnist({ bs: 64 }).iterator();
+  const exampleBatch = (await trainDataset.next()).value;
 
-  console.log({ batch });
+  console.log({ batch: exampleBatch });
+  console.log({ model });
+  const y_hat = model.forward(exampleBatch.x);
+  y_hat.print();
+  console.log(y_hat);
+
+  let i = 0;
+  setInterval(async () => {
+    const examplePreds = model.forward(exampleBatch.x);
+    const exampleLoss = tf.metrics
+      .categoricalAccuracy(exampleBatch.y, examplePreds)
+      .mean();
+    exampleLoss.print();
+
+    const batch = (await trainDataset.next()).value;
+    const loss = await model.optimStep(batch);
+
+    console.log(i, loss);
+    i++;
+  }, 100);
 }
