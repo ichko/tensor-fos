@@ -9,7 +9,6 @@ window.onload = async () => {
   const editor = new Editor();
   document.body.appendChild(editor.domElement);
 
-  tf.backend(); // Register backend
   makeUI();
 
   ml.exampleVAE();
