@@ -3,7 +3,8 @@ import { Optimizer, Scalar, Tensor } from '@tensorflow/tfjs';
 import { namespace } from 'd3-selection';
 import * as mnist from 'mnist';
 
-const set = mnist.set(60000, 10000);
+tf.backend(); // Register backend
+// tf.enableDebugMode();
 
 export abstract class BaseModel<Input, Output, Batch> {
   abstract forward(x: Input): Output;
@@ -12,6 +13,8 @@ export abstract class BaseModel<Input, Output, Batch> {
 
   abstract optimStep(batch: Batch): Promise<number>;
 }
+
+const set = mnist.set(60000, 10000);
 
 export const data = {
   loadMnist: (shuffleBuffer = 128) => {
@@ -37,7 +40,7 @@ export const data = {
   },
 };
 
-namespace VAE {
+export namespace VAE {
   interface Batch {
     x: Tensor;
     y: Tensor;
@@ -81,9 +84,6 @@ namespace VAE {
 }
 
 export async function exampleVAE() {
-  tf.backend(); // Register backend
-  // tf.enableDebugMode();
-
   const model = new VAE.Model();
   model.net.summary();
 
