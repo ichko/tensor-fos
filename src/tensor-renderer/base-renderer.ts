@@ -22,11 +22,11 @@ export abstract class BaseRenderer<Config> {
   public constructor(protected config: Config) {}
   public abstract get domElement(): HTMLElement;
 
-  public setTensor(tensor: Tensor) {
+  public setTensor(tensor: Tensor, rebuildIfNecessary = true) {
     const shouldRebuild = !arraysEqual(this.shape, tensor.shape);
     this.lastTensor = tensor;
 
-    if (shouldRebuild) {
+    if (rebuildIfNecessary && shouldRebuild) {
       this.domElement.innerText = '';
       this.build(this.config);
     }
@@ -61,5 +61,10 @@ export abstract class BaseRenderer<Config> {
     };
 
     return variable;
+  }
+
+  appendToBody() {
+    document.body.appendChild(this.domElement);
+    return this;
   }
 }
