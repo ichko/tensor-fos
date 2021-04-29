@@ -60,13 +60,14 @@ window.onload = async () => {
 
   let i = 0;
   setInterval(async () => {
+    stats.begin();
     const examplePreds = model.forward(exampleBatch.x);
     const exampleLoss = tf.metrics
       .categoricalAccuracy(exampleBatch.y, examplePreds)
       .mean()
       .dataSync()[0];
 
-    if (i % 10 === 0) {
+    if (i % 5 === 0) {
       predView.setTensor(examplePreds.reshape([4, 4, 10]), false);
     }
 
@@ -75,5 +76,6 @@ window.onload = async () => {
 
     console.log(i, `loss: ${loss}, acc: ${exampleLoss}`);
     i++;
+    stats.end();
   }, 30);
 };
