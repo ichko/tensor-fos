@@ -1,5 +1,4 @@
 import * as d3 from 'd3';
-import { renderer } from 'zoom-pan/src/renderer';
 
 function ondrag(
   elem: HTMLElement,
