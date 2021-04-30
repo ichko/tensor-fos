@@ -1,12 +1,12 @@
 // require('dotenv').config();
 
 import { makeStats } from './ui';
-import { Editor } from './editor';
 import * as ml from './ml';
 import * as tf from '@tensorflow/tfjs';
 import { QuickSettingsRenderer } from './tensor-renderer/quick-settings';
 import { TfJsVisRenderer } from './tensor-renderer/tfjs-vis';
 import { SmallMultiplesRenderer } from './tensor-renderer/small-multiples';
+import { BaklavaEditor } from './editor/baklava';
 
 window.onload = async () => {
   // const editor = new Editor();
@@ -15,6 +15,11 @@ window.onload = async () => {
   // ml.exampleVAE();
 
   const stats = makeStats();
+
+  const editor = new BaklavaEditor();
+  document.body.appendChild(editor.domElement);
+
+  return;
 
   const batchView = new QuickSettingsRenderer({
     title: 'batch',
@@ -59,7 +64,7 @@ window.onload = async () => {
   batchView.setTensor(exampleBatch.x.reshape([4, 4, 28, 28]), false);
 
   let i = 0;
-  setInterval(async () => {
+  const interval = setInterval(async () => {
     stats.begin();
     const examplePreds = model.forward(exampleBatch.x);
     const exampleLoss = tf.metrics
@@ -77,5 +82,9 @@ window.onload = async () => {
     console.log(i, `loss: ${loss}, acc: ${exampleLoss}`);
     i++;
     stats.end();
+
+    if (i >= 500) {
+      clearInterval(interval);
+    }
   }, 30);
 };
