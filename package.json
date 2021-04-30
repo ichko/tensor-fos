@@ -44,20 +44,18 @@
     "@tensorflow/tfjs-data": "^3.4.0",
     "@tensorflow/tfjs-vis": "^1.5.1",
     "@types/seedrandom": "^2.4.28",
+    "baklavajs": "^1.8.6",
     "color-interpolate": "^1.0.5",
     "colormap": "^2.3.2",
     "d3": "^6.6.1",
     "d3fc": "^15.1.2",
     "debounce": "^1.2.1",
-    "flume": "^0.6.3",
     "mnist": "^1.1.0",
     "quicksettings": "^3.0.1",
-    "react": "^16.14.0",
-    "react-dom": "^16.14.0",
     "regl": "^2.1.0",
     "seedrandom": "^3.0.5",
     "stats.js": "^0.17.0",
     "uplot": "^1.6.8",
-    "zoom-pan": "github:kwdowik/zoom-pan"
+    "vue": "^2.6.12"
   }
 }
