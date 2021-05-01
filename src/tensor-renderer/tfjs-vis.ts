@@ -41,8 +41,8 @@ export class TfJsVisRenderer extends BaseRenderer<Props> {
       const data = { values };
 
       tfvis.render.confusionMatrix(this.container, data, {
-        width: 150,
-        height: 120,
+        width: 100,
+        height: 80,
         showTextOverlay: false,
         shadeDiagonal: true,
         colorMap: 'viridis',
@@ -56,8 +56,8 @@ export class TfJsVisRenderer extends BaseRenderer<Props> {
       }));
 
       tfvis.render.barchart(this.container, data, {
-        width: 150,
-        height: 120,
+        width: 100,
+        height: 80,
       });
     }
   }

@@ -1,29 +1,38 @@
 import { Core, createBaklava } from 'baklavajs';
 import Vue from 'vue';
 
-
-const el = document.createElement('div');
-el.innerHTML = 'i am the div';
-
-const MyOption = Vue.component('MyOption', {
-  props: ["option", "node", "value"],
+const InjectableOption = Vue.component('InjectableOption', {
+  props: ['option', 'node', 'value'],
   data: function () {
-    return {
-      count: 0,
-      dom: el
-    };
+    return {};
   },
-  created: function() {
-    console.log(this.$refs)
+  mounted: function () {
+    const container = this.$refs.container as HTMLElement;
+    const injected = this.$props.option.element as () => HTMLElement;
+    container.appendChild(injected());
   },
-  template:
-    '<button v-on:click="count++">You clicked me {{ count }} times. (dom: {{ dom }} )</button>',
+  template: '<div ref="container"></div>',
 });
 
+function injectCSS() {
+  const css = `
+    .node {
+      max-width: none;
+    }
+  `;
+
+  const style = document.createElement('style');
+  style.innerText = css;
+  document.body.appendChild(style);
+}
 export class BaklavaEditor {
   public domElement: HTMLElement;
+  private editor: any;
+  private customNodesMap: { [key: string]: any } = {};
 
   constructor() {
+    injectCSS();
+
     this.domElement = document.createElement('div');
     this.domElement.style.width = '90%';
     this.domElement.style.height = '90%';
@@ -33,19 +42,63 @@ export class BaklavaEditor {
     this.domElement.appendChild(editorDiv);
 
     const plugin = createBaklava(editorDiv);
-    const editor = plugin.editor;
+    this.editor = plugin.editor;
 
-    plugin.registerOption('MyOption', MyOption);
+    plugin.registerOption('InjectableOption', InjectableOption);
 
-    const myNode = new Core.NodeBuilder('My Node')
-      .setName("ButtonNode")
-      .addOption("My Option", 'MyOption')
-      .addOutputInterface("Test")
-      .build();
+    // const instance = new CustomNode();
+    // instance.position.x = 10;
+    // editor.addNode(instance);
+  }
 
-    editor.registerNodeType('My Node name', myNode);
+  registerNodeType({
+    name,
+    ins,
+    outs,
+    element,
+  }: {
+    name: string;
+    ins: string[];
+    outs: string[];
+    element: () => HTMLElement;
+  }) {
+    const CustomNodeBuilder = new Core.NodeBuilder(name)
+      .setName(name)
+      .addOption('injected option', 'InjectableOption', undefined, undefined, {
+        element,
+      });
 
-    const instance = new myNode();
-    editor.addNode(instance);
+    ins.forEach(inPort => CustomNodeBuilder.addInputInterface(inPort));
+    outs.forEach(outPort => CustomNodeBuilder.addOutputInterface(outPort));
+
+    const CustomNode = CustomNodeBuilder.build();
+    this.customNodesMap[name] = CustomNode;
+
+    this.editor.registerNodeType(name, CustomNode);
+  }
+
+  addNode({
+    name,
+    pos = { x: 0, y: 0 },
+    width = undefined,
+  }: {
+    name: string;
+    pos?: { x: number; y: number };
+    width?: number;
+  }) {
+    if (!this.customNodesMap[name]) {
+      throw new Error(`Unknown node type ${name}`);
+    }
+
+    const ctor = this.customNodesMap[name];
+    const instance = new ctor();
+    this.editor.addNode(instance);
+
+    instance.position = pos;
+    if (width) {
+      instance.width = width;
+    } else {
+      instance.width = 'auto';
+    }
   }
 }
