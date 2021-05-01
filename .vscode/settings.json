@@ -1,4 +1,8 @@
 {
   "editor.cursorBlinking": "solid",
-  "editor.fontSize": 14
+  "editor.fontSize": 14,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  }
 }
