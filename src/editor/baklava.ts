@@ -1,46 +1,29 @@
 import { Core, createBaklava } from 'baklavajs';
-import { OptionPlugin } from '@baklavajs/plugin-options-vue';
-import { ViewPlugin } from '@baklavajs/plugin-renderer-vue';
 import Vue from 'vue';
 
-const SomeOption = Vue.extend({
-  props: ['name', 'node'],
-  render(h) {
-    return h(
-      'button',
-      {
-        on: {
-          click: () => {
-            this.node.action(this.name);
-          },
-        },
-      },
-      this.name as string
-    );
+
+const el = document.createElement('div');
+el.innerHTML = 'i am the div';
+
+const MyOption = Vue.component('MyOption', {
+  props: ["option", "node", "value"],
+  data: function () {
+    return {
+      count: 0,
+      dom: el
+    };
   },
+  created: function() {
+    console.log(this.$refs)
+  },
+  template:
+    '<button v-on:click="count++">You clicked me {{ count }} times. (dom: {{ dom }} )</button>',
 });
 
 export class BaklavaEditor {
-  domElement: HTMLElement;
+  public domElement: HTMLElement;
 
   constructor() {
-    const option = Vue.component('MyOption', {
-      data: function () {
-        return {
-          count: 0,
-        };
-      },
-      template:
-        '<button v-on:click="count++">You clicked me {{ count }} times.</button>',
-    });
-
-    const viewPlugin = new ViewPlugin();
-    const optionsPlugin = new OptionPlugin();
-    viewPlugin.registerOption('MyOption', SomeOption);
-    viewPlugin.enableMinimap = true;
-
-    console.log(option);
-
     this.domElement = document.createElement('div');
     this.domElement.style.width = '90%';
     this.domElement.style.height = '90%';
@@ -51,17 +34,16 @@ export class BaklavaEditor {
 
     const plugin = createBaklava(editorDiv);
     const editor = plugin.editor;
-    editor.use(optionsPlugin);
-    editor.use(viewPlugin);
+
+    plugin.registerOption('MyOption', MyOption);
 
     const myNode = new Core.NodeBuilder('My Node')
-      .addOption('Operation', 'SelectOption', 'Add', undefined, {
-        items: ['Add', 'Subtract'],
-      })
-      .addOption('MyOptionLabel', 'MyOption')
+      .setName("ButtonNode")
+      .addOption("My Option", 'MyOption')
+      .addOutputInterface("Test")
       .build();
 
-    editor.registerNodeType('My Node', myNode);
+    editor.registerNodeType('My Node name', myNode);
 
     const instance = new myNode();
     editor.addNode(instance);

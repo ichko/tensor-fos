@@ -27,6 +27,7 @@ module.exports = {
   resolve: {
     modules: [path.resolve('.'), path.resolve('./node_modules')],
     extensions: ['jsx', '.tsx', '.ts', '.js'],
+    alias: { vue: 'vue/dist/vue.esm.js' }, // This is here, because - https://github.com/newcat/baklavajs/issues/102#issuecomment-830630797
   },
   output: {
     path: path.resolve(__dirname, 'dist'),
