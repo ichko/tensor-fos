@@ -19,31 +19,50 @@ window.onload = async () => {
   const editor = new BaklavaEditor();
   document.body.appendChild(editor.domElement);
 
-  return;
+  const batchViewRenderer = new SmallMultiplesRenderer(
+    {
+      nDimsEntity: 2,
+      dimDirections: ['horizontal', 'vertical', 'horizontal', 'vertical'],
+    },
+    () => new TfJsVisRenderer({ type: 'heatmap' })
+  );
 
-  const batchView = new QuickSettingsRenderer({
-    title: 'batch',
-    pos: { x: 10, y: 10 },
-    renderer: new SmallMultiplesRenderer(
-      {
-        nDimsEntity: 2,
-        dimDirections: ['horizontal', 'vertical', 'horizontal', 'vertical'],
-      },
-      () => new TfJsVisRenderer({ type: 'heatmap' })
-    ),
-  }).appendToBody();
+  const predViewRenderer = new SmallMultiplesRenderer(
+    {
+      nDimsEntity: 1,
+      dimDirections: ['horizontal', 'vertical', 'horizontal'],
+    },
+    () => new TfJsVisRenderer({ type: 'barchart' })
+  );
 
-  const predView = new QuickSettingsRenderer({
-    title: 'preds',
-    pos: { x: 700, y: 10 },
-    renderer: new SmallMultiplesRenderer(
-      {
-        nDimsEntity: 1,
-        dimDirections: ['horizontal', 'vertical', 'horizontal'],
-      },
-      () => new TfJsVisRenderer({ type: 'barchart' })
-    ),
-  }).appendToBody();
+  editor.registerNodeType({
+    name: 'Heatmap',
+    ins: [],
+    outs: [],
+    element: () => batchViewRenderer.domElement,
+  });
+
+  editor.registerNodeType({
+    name: 'Barchart',
+    ins: [],
+    outs: [],
+    element: () => predViewRenderer.domElement,
+  });
+
+  editor.addNode({ name: 'Heatmap', pos: { x: 10, y: 10 } });
+  editor.addNode({ name: 'Barchart', pos: { x: 450, y: 10 } });
+
+  // const batchView = new QuickSettingsRenderer({
+  //   title: 'batch',
+  //   pos: { x: 10, y: 10 },
+  //   renderer: batchViewRenderer,
+  // }).appendToBody();
+
+  // const predView = new QuickSettingsRenderer({
+  //   title: 'preds',
+  //   pos: { x: 700, y: 10 },
+  //   renderer: predViewRenderer,
+  // }).appendToBody();
 
   // batchView.setTensor(tf.randomUniform([4, 4, 28, 28]), false);
   // predView.setTensor(tf.randomUniform([4, 4, 10]), false);
@@ -61,7 +80,7 @@ window.onload = async () => {
   y_hat.print();
   console.log(y_hat);
 
-  batchView.setTensor(exampleBatch.x.reshape([4, 4, 28, 28]), false);
+  batchViewRenderer.setTensor(exampleBatch.x.reshape([4, 4, 28, 28]));
 
   let i = 0;
   const interval = setInterval(async () => {
@@ -73,7 +92,7 @@ window.onload = async () => {
       .dataSync()[0];
 
     if (i % 5 === 0) {
-      predView.setTensor(examplePreds.reshape([4, 4, 10]), false);
+      predViewRenderer.setTensor(examplePreds.reshape([4, 4, 10]));
     }
 
     const batch = (await trainDataset.next()).value;
