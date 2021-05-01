@@ -16,6 +16,8 @@ window.onload = async () => {
 
   const stats = makeStats();
 
+  document.body.style.margin = '0px';
+
   const editor = new BaklavaEditor();
   document.body.appendChild(editor.domElement);
 

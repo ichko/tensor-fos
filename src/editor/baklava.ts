@@ -34,9 +34,8 @@ export class BaklavaEditor {
     injectCSS();
 
     this.domElement = document.createElement('div');
-    this.domElement.style.width = '90%';
-    this.domElement.style.height = '90%';
-    this.domElement.style.margin = '0 auto';
+    this.domElement.style.width = '100%';
+    this.domElement.style.height = '100%';
 
     const editorDiv = document.createElement('div');
     this.domElement.appendChild(editorDiv);
