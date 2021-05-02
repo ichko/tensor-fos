@@ -6,7 +6,7 @@ import * as tf from '@tensorflow/tfjs';
 import { QuickSettingsRenderer } from './tensor-renderer/quick-settings';
 import { TfJsVisRenderer } from './tensor-renderer/tfjs-vis';
 import { SmallMultiplesRenderer } from './tensor-renderer/small-multiples';
-import { BaklavaEditor } from './editor/baklava';
+import { BaklavaEditor } from './editor';
 
 window.onload = async () => {
   // const editor = new Editor();
@@ -38,36 +38,21 @@ window.onload = async () => {
   );
 
   editor.registerNodeType({
-    name: 'Heatmap',
+    id: 'Heatmap',
     ins: [],
     outs: ['return'],
     element: () => batchViewRenderer.domElement,
   });
 
   editor.registerNodeType({
-    name: 'Barchart',
+    id: 'Barchart',
     ins: ['in'],
     outs: [],
     element: () => predViewRenderer.domElement,
   });
 
-  editor.addNode({ name: 'Heatmap', pos: { x: 10, y: 10 } });
-  editor.addNode({ name: 'Barchart', pos: { x: 450, y: 10 } });
-
-  // const batchView = new QuickSettingsRenderer({
-  //   title: 'batch',
-  //   pos: { x: 10, y: 10 },
-  //   renderer: batchViewRenderer,
-  // }).appendToBody();
-
-  // const predView = new QuickSettingsRenderer({
-  //   title: 'preds',
-  //   pos: { x: 700, y: 10 },
-  //   renderer: predViewRenderer,
-  // }).appendToBody();
-
-  // batchView.setTensor(tf.randomUniform([4, 4, 28, 28]), false);
-  // predView.setTensor(tf.randomUniform([4, 4, 10]), false);
+  editor.addNode({ id: 'Heatmap', pos: { x: 10, y: 10 } });
+  editor.addNode({ id: 'Barchart', pos: { x: 450, y: 10 } });
 
   const model = new ml.VAE.Model();
   model.net.summary();

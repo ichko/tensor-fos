@@ -52,18 +52,18 @@ export class BaklavaEditor {
   }
 
   registerNodeType({
-    name,
+    id,
     ins,
     outs,
     element,
   }: {
-    name: string;
+    id: string;
     ins: string[];
     outs: string[];
     element: () => HTMLElement;
   }) {
-    const CustomNodeBuilder = new Core.NodeBuilder(name)
-      .setName(name)
+    const CustomNodeBuilder = new Core.NodeBuilder(id)
+      .setName(id)
       .addOption('injected option', 'InjectableOption', undefined, undefined, {
         element,
       });
@@ -77,28 +77,31 @@ export class BaklavaEditor {
       instance.width = 'auto';
       return instance;
     };
-    this.customNodesMap[name] = decoratedCtor;
+    this.customNodesMap[id] = decoratedCtor;
 
-    this.editor.registerNodeType(name, decoratedCtor);
+    this.editor.registerNodeType(id, decoratedCtor);
   }
 
   addNode({
-    name,
+    id,
+    title = undefined,
     pos = { x: 0, y: 0 },
     width = undefined,
   }: {
-    name: string;
+    id: string;
+    title?: string;
     pos?: { x: number; y: number };
     width?: number;
   }) {
-    if (!this.customNodesMap[name]) {
-      throw new Error(`Unknown node type ${name}`);
+    if (!this.customNodesMap[id]) {
+      throw new Error(`Unknown node type ${id}`);
     }
 
-    const ctor = this.customNodesMap[name];
+    const ctor = this.customNodesMap[id];
     const instance = new ctor();
     this.editor.addNode(instance);
 
+    instance.name = title || id;
     instance.position = pos;
   }
 }
