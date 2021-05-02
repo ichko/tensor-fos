@@ -40,13 +40,13 @@ window.onload = async () => {
   editor.registerNodeType({
     name: 'Heatmap',
     ins: [],
-    outs: [],
+    outs: ['return'],
     element: () => batchViewRenderer.domElement,
   });
 
   editor.registerNodeType({
     name: 'Barchart',
-    ins: [],
+    ins: ['in'],
     outs: [],
     element: () => predViewRenderer.domElement,
   });

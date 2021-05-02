@@ -25,6 +25,7 @@ function injectCSS() {
   style.innerText = css;
   document.body.appendChild(style);
 }
+
 export class BaklavaEditor {
   public domElement: HTMLElement;
   private editor: any;
@@ -71,9 +72,14 @@ export class BaklavaEditor {
     outs.forEach(outPort => CustomNodeBuilder.addOutputInterface(outPort));
 
     const CustomNode = CustomNodeBuilder.build();
-    this.customNodesMap[name] = CustomNode;
+    const decoratedCtor = () => {
+      const instance = new CustomNode() as any;
+      instance.width = 'auto';
+      return instance;
+    };
+    this.customNodesMap[name] = decoratedCtor;
 
-    this.editor.registerNodeType(name, CustomNode);
+    this.editor.registerNodeType(name, decoratedCtor);
   }
 
   addNode({
@@ -94,10 +100,5 @@ export class BaklavaEditor {
     this.editor.addNode(instance);
 
     instance.position = pos;
-    if (width) {
-      instance.width = width;
-    } else {
-      instance.width = 'auto';
-    }
   }
 }
