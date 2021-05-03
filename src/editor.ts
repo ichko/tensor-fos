@@ -1,10 +1,11 @@
-import { Core, createBaklava } from 'baklavajs';
-import { ContourDensity } from 'd3-contour';
+import { Core, createBaklava, PluginEngine } from 'baklavajs';
+import { Engine } from '@baklavajs/plugin-engine';
+import { OptionPlugin } from '@baklavajs/plugin-options-vue';
 import Vue from 'vue';
 
 interface Context<I, O> {
   domElement?: HTMLElement;
-  compute: (i: I) => Promise<O>;
+  compute?: (i: I) => Promise<O>;
 }
 
 interface NodeType<I, O> {
@@ -47,6 +48,7 @@ export class BaklavaEditor {
   public domElement: HTMLElement;
   private editor: any;
   private customNodesMap: { [key: string]: () => Core.Node } = {};
+  private engine: PluginEngine.Engine;
 
   constructor() {
     injectCSS();
@@ -60,8 +62,44 @@ export class BaklavaEditor {
 
     const plugin = createBaklava(editorDiv);
     this.editor = plugin.editor;
+    this.engine = new Engine(
+      false /* whether to automatically calculate on changes */
+    );
+    this.editor.use(this.engine);
+    this.editor.use(new OptionPlugin());
 
     plugin.registerOption('InjectableOption', InjectableOption);
+
+    // let ResolveNode = new Core.NodeBuilder('Resolve')
+    //   .setName('Resolve')
+    //   .addOption('ButtonOption', 'ButtonOption')
+    //   .build();
+
+    // this.editor.registerNodeType('Resolve', ResolveNode);
+
+    this.registerNodeType({
+      id: 'Step',
+      ctor: async () => {
+        const button = document.createElement('button');
+        button.innerText = 'Play';
+
+        let play = false;
+        button.onclick = () => {
+          play = !play;
+          button.innerText = play ? 'Pause' : 'Play';
+        };
+
+        setInterval(() => {
+          if (play) {
+            this.resolve();
+          }
+        }, 100);
+
+        return { domElement: button };
+      },
+    });
+
+    this.addNode({ id: 'Step', pos: { x: 20, y: 20 } });
   }
 
   registerNodeType<I, O>({ id, ins = [], outs = [], ctor }: NodeType<I, O>) {
@@ -81,10 +119,36 @@ export class BaklavaEditor {
     );
 
     const decoratedCtor = () => {
+      BaklavaNodeBuilder = BaklavaNodeBuilder.onCalculate(
+        async (node, data) => {
+          const values = await Promise.all(
+            ins.map(i => node.getInterface(i as string).value)
+          );
+
+          const inMap: { [key: string]: string } = {};
+          ins.forEach((inName, index) => {
+            inMap[inName as string] = values[index];
+          });
+
+          const compute = await (node as any).$compute;
+          if (!compute) return;
+
+          const result = await compute(inMap);
+
+          if (result) {
+            Object.keys(result).forEach(key => {
+              node.getInterface(key).value = result[key];
+            });
+          }
+
+          return result;
+        }
+      );
+
       const baklavaNodeCtor = BaklavaNodeBuilder.build();
       const baklavaNodeInstance = new baklavaNodeCtor() as any;
-
-      ctor().then(({ domElement, compute }) => {
+      baklavaNodeInstance.$compute = new Promise(async resolve => {
+        const { domElement, compute } = await ctor();
         if (domElement) {
           baklavaNodeInstance.addOption(
             'injected option',
@@ -95,7 +159,7 @@ export class BaklavaEditor {
           );
         }
 
-        baklavaNodeInstance.$compute = compute;
+        resolve(compute);
       });
 
       baklavaNodeInstance.width = 'auto';
@@ -107,8 +171,72 @@ export class BaklavaEditor {
     this.editor.registerNodeType(id, decoratedCtor);
   }
 
-  resolve(node: Core.Node) {
-    console.log(node);
+  async resolve() {
+    this.engine.calculate();
+
+    // const inputs = node.inputInterfaces;
+    // const keys = Object.keys(inputs);
+    // const connections = this.editor.connections;
+    // const nodes = this.editor.nodes;
+
+    // console.log(connections, nodes);
+
+    // const nodeToInterfaceIdToName: {
+    //   [key: string]: { [key: string]: string };
+    // } = {};
+
+    // // from node id -> from interface name -> [to node id, to interface name]
+    // const assocs: {
+    //   [key: string]: { [key: string]: [string, string][] };
+    // } = {};
+
+    // nodes.forEach((n: any) => {
+    //   const interfaces = Array.from(n.interfaces.keys());
+    //   const nid = n.id;
+
+    //   interfaces.forEach((k: any) => {
+    //     nodeToInterfaceIdToName[nid] = nodeToInterfaceIdToName[nid] || {};
+    //     const id = n.interfaces.get(k).id;
+    //     nodeToInterfaceIdToName[nid][id] = k;
+    //   });
+    // });
+
+    // connections.forEach((con: any) => {
+    //   const fromInterfaceId = con.from.id;
+    //   const toInterfaceId = con.to.id;
+    //   const fromNodeId = con.from.parent.id;
+    //   const toNodeId = con.to.parent.id;
+
+    //   const fromInterfaceName =
+    //     nodeToInterfaceIdToName[fromNodeId][fromInterfaceId];
+    //   const toInterfaceName = nodeToInterfaceIdToName[toNodeId][toInterfaceId];
+
+    //   assocs[fromNodeId] = assocs[fromNodeId] || {};
+    //   assocs[fromNodeId][fromInterfaceName] =
+    //     assocs[fromNodeId][fromInterfaceName] || [];
+
+    //   assocs[fromNodeId][fromInterfaceName].push([toNodeId, toInterfaceName]);
+    // });
+
+    // console.log(assocs);
+
+    // function recur(node: Core.Node) {
+    //   const ins = node.inputInterfaces;
+    // }
+
+    // // const mappedKeys: { [key: string]: any } = {};
+    // // await Promise.all(
+    // //   keys.map(async key => {
+    // //     const inId = inputs[key].id;
+    // //     const connection = connections.find((c: any) => c.to.id === inId);
+    // //     const fromNode = connection.from.parent as Core.Node;
+    // //     mappedKeys[key] = await this.resolve(fromNode);
+    // //   })
+    // // );
+
+    // // console.log({ node });
+    // // const resolution = await (node as any).$compute(mappedKeys);
+    // // return resolution;
   }
 
   addConnection(
