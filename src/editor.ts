@@ -1,5 +1,22 @@
 import { Core, createBaklava } from 'baklavajs';
+import { ContourDensity } from 'd3-contour';
 import Vue from 'vue';
+
+interface Context<I, O> {
+  domElement?: HTMLElement;
+  compute: (i: I) => Promise<O>;
+}
+
+interface NodeType<I, O> {
+  id: string;
+  ins?: (keyof I)[];
+  outs?: (keyof O)[];
+  ctor(): Promise<Context<I, O>>;
+}
+
+export function nodeType<I, O>(nodeType: NodeType<I, O>) {
+  return nodeType;
+}
 
 const InjectableOption = Vue.component('InjectableOption', {
   props: ['option', 'node', 'value'],
@@ -8,8 +25,8 @@ const InjectableOption = Vue.component('InjectableOption', {
   },
   mounted: function () {
     const container = this.$refs.container as HTMLElement;
-    const injected = this.$props.option.element as () => HTMLElement;
-    container.appendChild(injected());
+    const injected = this.$props.option.element as HTMLElement;
+    container.appendChild(injected);
   },
   template: '<div ref="container"></div>',
 });
@@ -29,7 +46,7 @@ function injectCSS() {
 export class BaklavaEditor {
   public domElement: HTMLElement;
   private editor: any;
-  private customNodesMap: { [key: string]: any } = {};
+  private customNodesMap: { [key: string]: () => Core.Node } = {};
 
   constructor() {
     injectCSS();
@@ -45,41 +62,65 @@ export class BaklavaEditor {
     this.editor = plugin.editor;
 
     plugin.registerOption('InjectableOption', InjectableOption);
-
-    // const instance = new CustomNode();
-    // instance.position.x = 10;
-    // editor.addNode(instance);
   }
 
-  registerNodeType({
-    id,
-    ins,
-    outs,
-    element,
-  }: {
-    id: string;
-    ins: string[];
-    outs: string[];
-    element: () => HTMLElement;
-  }) {
-    const CustomNodeBuilder = new Core.NodeBuilder(id)
-      .setName(id)
-      .addOption('injected option', 'InjectableOption', undefined, undefined, {
-        element,
+  registerNodeType<I, O>({ id, ins = [], outs = [], ctor }: NodeType<I, O>) {
+    let BaklavaNodeBuilder = new Core.NodeBuilder(id).setName(id);
+
+    ins.forEach(
+      inPort =>
+        (BaklavaNodeBuilder = BaklavaNodeBuilder.addInputInterface(
+          inPort as string
+        ))
+    );
+    outs.forEach(
+      outPort =>
+        (BaklavaNodeBuilder = BaklavaNodeBuilder.addOutputInterface(
+          outPort as string
+        ))
+    );
+
+    const decoratedCtor = () => {
+      const baklavaNodeCtor = BaklavaNodeBuilder.build();
+      const baklavaNodeInstance = new baklavaNodeCtor() as any;
+
+      ctor().then(({ domElement, compute }) => {
+        if (domElement) {
+          baklavaNodeInstance.addOption(
+            'injected option',
+            'InjectableOption',
+            undefined,
+            undefined,
+            { element: domElement }
+          );
+        }
+
+        baklavaNodeInstance.$compute = compute;
       });
 
-    ins.forEach(inPort => CustomNodeBuilder.addInputInterface(inPort));
-    outs.forEach(outPort => CustomNodeBuilder.addOutputInterface(outPort));
+      baklavaNodeInstance.width = 'auto';
 
-    const CustomNode = CustomNodeBuilder.build();
-    const decoratedCtor = () => {
-      const instance = new CustomNode() as any;
-      instance.width = 'auto';
-      return instance;
+      return baklavaNodeInstance as Core.Node;
     };
     this.customNodesMap[id] = decoratedCtor;
 
     this.editor.registerNodeType(id, decoratedCtor);
+  }
+
+  resolve(node: Core.Node) {
+    console.log(node);
+  }
+
+  addConnection(
+    fromNode: Core.Node,
+    toNode: Core.Node,
+    fromInterface: string,
+    toInterface: string
+  ) {
+    this.editor.addConnection(
+      fromNode.getInterface(fromInterface),
+      toNode.getInterface(toInterface)
+    );
   }
 
   addNode({
@@ -98,10 +139,12 @@ export class BaklavaEditor {
     }
 
     const ctor = this.customNodesMap[id];
-    const instance = new ctor();
+    const instance = ctor();
     this.editor.addNode(instance);
 
     instance.name = title || id;
-    instance.position = pos;
+    (instance as any).position = pos;
+
+    return instance;
   }
 }
