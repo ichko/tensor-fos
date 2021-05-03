@@ -70,13 +70,6 @@ export class BaklavaEditor {
 
     plugin.registerOption('InjectableOption', InjectableOption);
 
-    // let ResolveNode = new Core.NodeBuilder('Resolve')
-    //   .setName('Resolve')
-    //   .addOption('ButtonOption', 'ButtonOption')
-    //   .build();
-
-    // this.editor.registerNodeType('Resolve', ResolveNode);
-
     this.registerNodeType({
       id: 'Step',
       ctor: async () => {
