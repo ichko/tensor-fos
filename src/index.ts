@@ -6,14 +6,93 @@ import * as tf from '@tensorflow/tfjs';
 import { QuickSettingsRenderer } from './tensor-renderer/quick-settings';
 import { TfJsVisRenderer } from './tensor-renderer/tfjs-vis';
 import { SmallMultiplesRenderer } from './tensor-renderer/small-multiples';
-import { BaklavaEditor } from './editor';
+import { BaklavaEditor, nodeType } from './editor';
+import { LazyIterator } from '@tensorflow/tfjs-data/dist/iterators/lazy_iterator';
+import { conv2dTranspose, Tensor } from '@tensorflow/tfjs';
+
+const MnistDatasetNodeType = nodeType({
+  id: 'Mnist',
+  outs: ['nextBatch', 'exampleBatch'],
+  ctor: async () => {
+    const mnist = ml.data.loadMnist();
+    const trainDataset = await mnist({ bs: 16 }).iterator();
+    const exampleBatch = (await trainDataset.next()).value;
+
+    return {
+      compute: async () => ({
+        nextBatch: (await trainDataset.next()).value,
+        exampleBatch,
+      }),
+    };
+  },
+});
+
+const VAEModelNodeType = nodeType({
+  id: 'VAE',
+  ins: ['optimBatch', 'forwardBatch'],
+  outs: ['preds', 'optimStep'],
+  ctor: async () => {
+    const model = new ml.VAE.Model();
+    model.net.summary();
+
+    return {
+      compute: async ({
+        forwardBatch,
+        optimBatch,
+      }: {
+        forwardBatch: ml.VAE.Batch;
+        optimBatch: ml.VAE.Batch;
+      }) => ({
+        preds: model.forward(forwardBatch.x),
+        optimStep: model.optimStep(optimBatch),
+      }),
+    };
+  },
+});
+
+const HeapmapNodeType = nodeType({
+  id: 'Heatmap',
+  ins: ['tensor'],
+  ctor: async () => {
+    const batchViewRenderer = new SmallMultiplesRenderer(
+      {
+        nDimsEntity: 2,
+        dimDirections: ['horizontal', 'vertical', 'horizontal', 'vertical'],
+      },
+      () => new TfJsVisRenderer({ type: 'heatmap' })
+    );
+
+    return {
+      domElement: batchViewRenderer.domElement,
+      compute: async ({ tensor }: { tensor: Tensor }) => {
+        batchViewRenderer.setTensor(tensor.reshape([4, 4, 28, 28]));
+      },
+    };
+  },
+});
+
+const BarchartNodeType = nodeType({
+  id: 'Barchart',
+  ins: ['tensor'],
+  ctor: async () => {
+    const predViewRenderer = new SmallMultiplesRenderer(
+      {
+        nDimsEntity: 1,
+        dimDirections: ['horizontal', 'vertical', 'horizontal'],
+      },
+      () => new TfJsVisRenderer({ type: 'barchart' })
+    );
+
+    return {
+      domElement: predViewRenderer.domElement,
+      compute: async ({ tensor }: { tensor: Tensor }) => {
+        predViewRenderer.setTensor(tensor.reshape([4, 4, 10]));
+      },
+    };
+  },
+});
 
 window.onload = async () => {
-  // const editor = new Editor();
-  // document.body.appendChild(editor.domElement);
-
-  // ml.exampleVAE();
-
   const stats = makeStats();
 
   document.body.style.margin = '0px';
@@ -21,76 +100,41 @@ window.onload = async () => {
   const editor = new BaklavaEditor();
   document.body.appendChild(editor.domElement);
 
-  const batchViewRenderer = new SmallMultiplesRenderer(
-    {
-      nDimsEntity: 2,
-      dimDirections: ['horizontal', 'vertical', 'horizontal', 'vertical'],
-    },
-    () => new TfJsVisRenderer({ type: 'heatmap' })
-  );
+  editor.registerNodeType(MnistDatasetNodeType);
+  editor.registerNodeType(VAEModelNodeType);
+  editor.registerNodeType(HeapmapNodeType);
+  editor.registerNodeType(BarchartNodeType);
 
-  const predViewRenderer = new SmallMultiplesRenderer(
-    {
-      nDimsEntity: 1,
-      dimDirections: ['horizontal', 'vertical', 'horizontal'],
-    },
-    () => new TfJsVisRenderer({ type: 'barchart' })
-  );
-
-  editor.registerNodeType({
-    id: 'Heatmap',
-    ins: [],
-    outs: ['return'],
-    element: () => batchViewRenderer.domElement,
-  });
-
-  editor.registerNodeType({
+  const mnistNode = editor.addNode({ id: 'Mnist', pos: { x: 10, y: 50 } });
+  const vaeNode = editor.addNode({ id: 'VAE', pos: { x: 200, y: 150 } });
+  const heatmapNode = editor.addNode({ id: 'Heatmap', pos: { x: 500, y: 20 } });
+  const barchartNode = editor.addNode({
     id: 'Barchart',
-    ins: ['in'],
-    outs: [],
-    element: () => predViewRenderer.domElement,
+    pos: { x: 500, y: 350 },
   });
 
-  editor.addNode({ id: 'Heatmap', pos: { x: 10, y: 10 } });
-  editor.addNode({ id: 'Barchart', pos: { x: 450, y: 10 } });
+  editor.addConnection(mnistNode, vaeNode, 'nextBatch', 'optimBatch');
+  editor.addConnection(mnistNode, vaeNode, 'exampleBatch', 'forwardBatch');
+  editor.addConnection(mnistNode, heatmapNode, 'exampleBatch', 'tensor');
+  editor.addConnection(vaeNode, barchartNode, 'preds', 'tensor');
 
-  const model = new ml.VAE.Model();
-  model.net.summary();
+  editor.resolve(barchartNode);
 
-  const mnist = ml.data.loadMnist();
-  const trainDataset = await mnist({ bs: 16 }).iterator();
-  const exampleBatch = (await trainDataset.next()).value;
+  // let i = 0;
+  // const interval = setInterval(async () => {
+  //   stats.begin();
 
-  console.log({ batch: exampleBatch });
-  console.log({ model });
-  const y_hat = model.forward(exampleBatch.x);
-  y_hat.print();
-  console.log(y_hat);
+  //   if (i % 5 === 0) {
+  //   }
 
-  batchViewRenderer.setTensor(exampleBatch.x.reshape([4, 4, 28, 28]));
+  //   const loss = await model.optimStep(batch);
 
-  let i = 0;
-  const interval = setInterval(async () => {
-    stats.begin();
-    const examplePreds = model.forward(exampleBatch.x);
-    const exampleLoss = tf.metrics
-      .categoricalAccuracy(exampleBatch.y, examplePreds)
-      .mean()
-      .dataSync()[0];
+  //   console.log(i, `loss: ${loss}, acc: ${exampleLoss}`);
+  //   i++;
+  //   stats.end();
 
-    if (i % 5 === 0) {
-      predViewRenderer.setTensor(examplePreds.reshape([4, 4, 10]));
-    }
-
-    const batch = (await trainDataset.next()).value;
-    const loss = await model.optimStep(batch);
-
-    console.log(i, `loss: ${loss}, acc: ${exampleLoss}`);
-    i++;
-    stats.end();
-
-    if (i >= 500) {
-      clearInterval(interval);
-    }
-  }, 30);
+  //   if (i >= 500) {
+  //     clearInterval(interval);
+  //   }
+  // }, 30);
 };
