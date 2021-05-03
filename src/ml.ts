@@ -41,12 +41,12 @@ export const data = {
 };
 
 export namespace VAE {
-  interface Batch {
+  export interface Batch {
     x: Tensor;
     y: Tensor;
   }
-  type Input = Tensor;
-  type Output = Tensor;
+  export type Input = Tensor;
+  export type Output = Tensor;
 
   const optimizer = tf.train.adam();
 
