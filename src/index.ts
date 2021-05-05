@@ -1,8 +1,9 @@
 import { makeStats } from './ui';
 import { NodeEditor } from './node-editor';
 
-import { loadExampleNodeState, registerNodeTypes } from './node-registry';
+import { registerNodeTypes } from './node-registry';
 import { onCtlS, Persistance } from './utils';
+import { defaultEditorState } from './default-editor-state';
 
 function manageNodeEditorState(editor: NodeEditor) {
   const EDITOR_STATE_KEY = 'EDITOR_STATE_KEY';
@@ -10,11 +11,11 @@ function manageNodeEditorState(editor: NodeEditor) {
   const editorState = persistance.get<object>(EDITOR_STATE_KEY);
 
   if (editorState) {
-    console.log('Loading previously saved editor state');
+    console.log('[LOAD] Loading previously saved editor state');
     editor.loadState(editorState);
   } else {
-    console.log('Loading example node state');
-    loadExampleNodeState(editor);
+    console.log('[LOAD] Loading default editor state');
+    editor.loadState(defaultEditorState);
   }
 
   editor.resolve();
