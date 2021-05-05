@@ -204,4 +204,12 @@ export class NodeEditor {
 
     return instance;
   }
+
+  exportState(): object {
+    return this.editor.save();
+  }
+
+  loadState(state: object) {
+    this.editor.load(state);
+  }
 }

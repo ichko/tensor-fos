@@ -1,11 +1,29 @@
-// require('dotenv').config();
-
 import { makeStats } from './ui';
-import * as tf from '@tensorflow/tfjs';
-import { TfJsVisRenderer } from './tensor-renderer/tfjs-vis';
-import { SmallMultiplesRenderer } from './tensor-renderer/small-multiples';
-import { NodeEditor, nodeType } from './node-editor';
-import { Tensor } from '@tensorflow/tfjs';
+import { NodeEditor } from './node-editor';
+
+import { registerNodeTypes } from './node-registry';
+import { onCtlS, Persistance } from './utils';
+
+function manageNodeEditorState(editor: NodeEditor) {
+  const EDITOR_STATE_KEY = 'EDITOR_STATE_KEY';
+  const persistance = new Persistance();
+  const editorState = persistance.get<object>(EDITOR_STATE_KEY);
+
+  if (editorState) {
+    console.log('Loading previously saved editor state');
+    editor.loadState(editorState);
+  } else {
+    console.log('No editor state loaded');
+  }
+
+  editor.resolve();
+
+  onCtlS(() => {
+    const editorState = editor.exportState();
+    persistance.set(EDITOR_STATE_KEY, editorState);
+    console.log('[SAVED] State of nodes saved');
+  });
+}
 
 window.onload = async () => {
   const stats = makeStats();
@@ -15,7 +33,8 @@ window.onload = async () => {
   const editor = new NodeEditor();
   document.body.appendChild(editor.domElement);
 
-  editor.resolve();
+  registerNodeTypes(editor);
+  manageNodeEditorState(editor);
 
   function loop() {
     stats.begin();
