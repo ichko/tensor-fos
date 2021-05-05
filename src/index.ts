@@ -4,7 +4,7 @@ import { makeStats } from './ui';
 import * as tf from '@tensorflow/tfjs';
 import { TfJsVisRenderer } from './tensor-renderer/tfjs-vis';
 import { SmallMultiplesRenderer } from './tensor-renderer/small-multiples';
-import { Editor, nodeType } from './editor';
+import { NodeEditor, nodeType } from './node-editor';
 import { Tensor } from '@tensorflow/tfjs';
 
 window.onload = async () => {
@@ -12,7 +12,7 @@ window.onload = async () => {
 
   document.body.style.margin = '0px';
 
-  const editor = new Editor();
+  const editor = new NodeEditor();
   document.body.appendChild(editor.domElement);
 
   editor.resolve();

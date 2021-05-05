@@ -44,7 +44,7 @@ function injectCSS() {
   document.body.appendChild(style);
 }
 
-export class Editor {
+export class NodeEditor {
   public domElement: HTMLElement;
   private editor: any;
   private customNodesMap: { [key: string]: () => Core.Node } = {};

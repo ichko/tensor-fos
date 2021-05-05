@@ -1,5 +1,5 @@
 import { Tensor } from '@tensorflow/tfjs-core';
-import { Editor, nodeType } from './editor';
+import { NodeEditor, nodeType } from './node-editor';
 import * as ml from './ml';
 import { SmallMultiplesRenderer } from './tensor-renderer/small-multiples';
 import { TfJsVisRenderer } from './tensor-renderer/tfjs-vis';
@@ -93,13 +93,13 @@ const common = [
   }),
 ];
 
-export function registerNodeTypes(editor: Editor) {
+export function registerNodeTypes(editor: NodeEditor) {
   common.forEach(nodeType => {
     editor.registerNodeType(nodeType as any);
   });
 }
 
-export function loadExampleNodeState(editor: Editor) {
+function loadExampleNodeState(editor: NodeEditor) {
   const mnistNode = editor.addNode({ id: 'Mnist', pos: { x: 10, y: 350 } });
   const vaeNode = editor.addNode({
     id: 'MnistClassifier',
