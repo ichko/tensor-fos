@@ -1,4 +1,4 @@
-import { Tensor, Rank, Variable } from '@tensorflow/tfjs-core';
+import { Tensor, Rank } from '@tensorflow/tfjs-core';
 import QuickSettings, { AnyModel, QuickSettingsPanel } from 'quicksettings';
 import { BaseRenderer } from './base-renderer';
 

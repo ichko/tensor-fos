@@ -47,3 +47,31 @@ export const arraysEqual = (a: any[], b: any[]): boolean => {
 export const capitalize = (str: string) => {
   return str.charAt(0).toUpperCase() + str.slice(1);
 };
+
+// SRC - https://michilehr.de/overwrite-cmds-and-ctrls-in-javascript
+export function onCtlS(handler: () => void) {
+  document.addEventListener(
+    'keydown',
+    function (e) {
+      if (
+        (window.navigator.platform.match('Mac') ? e.metaKey : e.ctrlKey) &&
+        e.keyCode == 83
+      ) {
+        e.preventDefault();
+        handler();
+      }
+    },
+    false
+  );
+}
+export class Persistance {
+  set(key: string, value: object) {
+    window.localStorage.setItem(key, JSON.stringify(value));
+  }
+
+  get<T>(key: string): T | undefined {
+    const value = window.localStorage.getItem(key);
+    if (!value) return undefined;
+    return JSON.parse(value) as T;
+  }
+}
