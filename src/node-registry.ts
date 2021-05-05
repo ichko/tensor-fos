@@ -208,21 +208,3 @@ export function registerNodeTypes(editor: NodeEditor) {
     editor.registerNodeType(nodeType as any);
   });
 }
-
-export function loadExampleNodeState(editor: NodeEditor) {
-  const mnistNode = editor.addNode({ id: 'Mnist', pos: { x: 10, y: 350 } });
-  const vaeNode = editor.addNode({
-    id: 'MnistClassifier',
-    pos: { x: 200, y: 450 },
-  });
-  const heatmapNode = editor.addNode({ id: 'Heatmap', pos: { x: 500, y: 20 } });
-  const barchartNode = editor.addNode({
-    id: 'Barchart',
-    pos: { x: 500, y: 500 },
-  });
-
-  editor.addConnection(mnistNode, vaeNode, 'nextBatch', 'optimBatch');
-  editor.addConnection(mnistNode, vaeNode, 'exampleBatch', 'forwardBatch');
-  editor.addConnection(mnistNode, heatmapNode, 'exampleBatch', 'batch');
-  editor.addConnection(vaeNode, barchartNode, 'preds', 'tensor');
-}
