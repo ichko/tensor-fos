@@ -3,6 +3,8 @@ import { NodeEditor, nodeType } from './node-editor';
 import * as ml from './ml';
 import { SmallMultiplesRenderer } from './tensor-renderer/small-multiples';
 import { TfJsVisRenderer } from './tensor-renderer/tfjs-vis';
+import * as tf from '@tensorflow/tfjs';
+import { memo } from './utils';
 
 const common = [
   nodeType({
@@ -17,6 +19,19 @@ const common = [
         compute: async () => ({
           nextBatch: (await trainDataset.next()).value,
           exampleBatch,
+        }),
+      };
+    },
+  }),
+
+  nodeType({
+    id: 'Select Batch Input',
+    ins: ['batch'],
+    outs: ['batch.x'],
+    ctor: async () => {
+      return {
+        compute: async ({ batch }: { batch: any }) => ({
+          'batch.x': batch.x,
         }),
       };
     },
@@ -49,7 +64,7 @@ const common = [
 
   nodeType({
     id: 'Heatmap',
-    ins: ['batch'],
+    ins: ['tensor'],
     ctor: async () => {
       const batchViewRenderer = new SmallMultiplesRenderer(
         {
@@ -62,9 +77,9 @@ const common = [
 
       return {
         domElement: batchViewRenderer.domElement,
-        compute: async ({ batch }: { batch: ml.MnistClassifier.Batch }) => {
+        compute: async ({ tensor }: { tensor: Tensor }) => {
           if (alreadySet) return;
-          batchViewRenderer.setTensor(batch.x.reshape([4, 4, 28, 28]));
+          batchViewRenderer.setTensor(tensor.reshape([4, 4, 28, 28]));
           alreadySet = true;
         },
       };
@@ -91,15 +106,110 @@ const common = [
       };
     },
   }),
+
+  nodeType({
+    id: 'JSON.parse',
+    outs: ['value'],
+    ctor: async () => {
+      const element = document.createElement('input');
+      element.value = '[16, 28, 28]';
+
+      return {
+        domElement: element,
+        compute: async () => ({ value: JSON.parse(element.value) }),
+      };
+    },
+  }),
 ];
 
+interface Arg {
+  name: string;
+  type?: 'int' | 'list-int';
+  default?: any;
+}
+
+interface NodeDef {
+  func: any;
+  args?: Arg[];
+}
+
+function exportTfJsNodes() {
+  const objectInputArgDefs: NodeDef[] = [
+    {
+      func: tf.layers.dense,
+      args: [{ name: 'units', type: 'int', default: 10 }],
+    },
+    {
+      func: tf.layers.flatten,
+      args: [],
+    },
+    {
+      func: tf.layers.embedding,
+      args: [
+        { name: 'inputDim', type: 'int', default: 10 },
+        { name: 'outputDim', type: 'int', default: 10 },
+      ],
+    },
+  ];
+  const sequentialInputArgsDefs: NodeDef[] = [
+    {
+      func: tf.rand,
+      args: [{ name: 'shape', type: 'list-int', default: [3, 5, 5] }],
+    },
+    {
+      func: tf.randomNormal,
+      args: [{ name: 'shape', type: 'list-int', default: [3, 5, 5] }],
+    },
+    {
+      func: tf.randomUniform,
+      args: [{ name: 'shape', type: 'list-int', default: [3, 5, 5] }],
+    },
+  ];
+
+  const objectInputArgNodes = objectInputArgDefs.map(def =>
+    nodeType({
+      id: `tf.layers.${def.func.name}`,
+      ins: def.args?.map(arg => arg.name),
+      outs: ['layer'],
+      ctor: async () => {
+        return {
+          compute: memo(async (args: any) => {
+            const layer = def.func(args);
+            return { layer };
+          }),
+        };
+      },
+    })
+  );
+
+  const sequentialInputArgsNodes = sequentialInputArgsDefs.map(def =>
+    nodeType({
+      id: `tf.${def.func.name}`,
+      ins: def.args?.map(arg => arg.name),
+      outs: ['tensor'],
+      ctor: async () => {
+        return {
+          compute: async (args: any) => {
+            const tensor = def.func(...Object.values(args));
+            return { tensor };
+          },
+        };
+      },
+    })
+  );
+
+  return [...objectInputArgNodes, ...sequentialInputArgsNodes];
+}
+
 export function registerNodeTypes(editor: NodeEditor) {
-  common.forEach(nodeType => {
+  const tfjsNodeTypes = exportTfJsNodes();
+
+  [...common, ...tfjsNodeTypes].forEach(nodeType => {
     editor.registerNodeType(nodeType as any);
   });
 }
 
-function loadExampleNodeState(editor: NodeEditor) {
+export function loadExampleNodeState(editor: NodeEditor) {
   const mnistNode = editor.addNode({ id: 'Mnist', pos: { x: 10, y: 350 } });
   const vaeNode = editor.addNode({
     id: 'MnistClassifier',
