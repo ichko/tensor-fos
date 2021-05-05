@@ -75,3 +75,16 @@ export class Persistance {
     return JSON.parse(value) as T;
   }
 }
+
+export function memo(func: (...args: any) => any) {
+  const memo: { [key: string]: any } = {};
+  return function (this: any) {
+    const args = Array.from(arguments);
+    const key = JSON.stringify(args);
+    if (memo[key] === undefined) {
+      memo[key] = func.apply(this, args);
+    }
+
+    return memo[key];
+  };
+}
