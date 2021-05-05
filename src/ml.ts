@@ -40,7 +40,7 @@ export const data = {
   },
 };
 
-export namespace VAE {
+export namespace MnistClassifier {
   export interface Batch {
     x: Tensor;
     y: Tensor;
@@ -81,34 +81,4 @@ export namespace VAE {
         ?.dataSync()[0] as number;
     }
   }
-}
-
-export async function exampleVAE() {
-  const model = new VAE.Model();
-  model.net.summary();
-
-  const mnist = data.loadMnist();
-  const trainDataset = await mnist({ bs: 64 }).iterator();
-  const exampleBatch = (await trainDataset.next()).value;
-
-  console.log({ batch: exampleBatch });
-  console.log({ model });
-  const y_hat = model.forward(exampleBatch.x);
-  y_hat.print();
-  console.log(y_hat);
-
-  let i = 0;
-  setInterval(async () => {
-    const examplePreds = model.forward(exampleBatch.x);
-    const exampleLoss = tf.metrics
-      .categoricalAccuracy(exampleBatch.y, examplePreds)
-      .mean();
-    exampleLoss.print();
-
-    const batch = (await trainDataset.next()).value;
-    const loss = await model.optimStep(batch);
-
-    console.log(i, loss);
-    i++;
-  }, 100);
 }
