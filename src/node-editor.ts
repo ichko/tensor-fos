@@ -13,6 +13,7 @@ interface NodeType<I, O> {
   ins?: (keyof I)[];
   outs?: (keyof O)[];
   ctor(): Promise<Context<I, O>>;
+  color?: string;
 }
 
 export function nodeType<I, O>(nodeType: NodeType<I, O>) {
@@ -36,6 +37,16 @@ function injectCSS() {
   const css = `
     .node {
       max-width: none;
+      border-radius: 0;
+    }
+    .node>.__title {
+      border-radius: 0;
+    }
+    .node:hover {
+      box-shadow: 0 0 0 2px #666;
+    }
+    .node.--selected {
+      box-shadow: 0 0 0 3px #28d4d8;
     }
   `;
 
@@ -70,6 +81,18 @@ export class NodeEditor {
 
     plugin.registerOption('InjectableOption', InjectableOption);
 
+    plugin.hooks.renderNode.tap(this, node => {
+      const nodeEl = (node as any).$el as HTMLElement;
+      const color = (node.data as any).$color;
+
+      if (color) {
+        nodeEl.style.background = color;
+        nodeEl.style.color = 'black';
+      }
+
+      return node;
+    });
+
     this.registerNodeType({
       id: 'Step',
       ctor: async () => {
@@ -95,7 +118,13 @@ export class NodeEditor {
     this.addNode({ id: 'Step', pos: { x: 20, y: 20 } });
   }
 
-  registerNodeType<I, O>({ id, ins = [], outs = [], ctor }: NodeType<I, O>) {
+  registerNodeType<I, O>({
+    id,
+    ins = [],
+    outs = [],
+    ctor,
+    color,
+  }: NodeType<I, O>) {
     let BaklavaNodeBuilder = new Core.NodeBuilder(id).setName(id);
 
     ins.forEach(
@@ -140,6 +169,7 @@ export class NodeEditor {
 
       const baklavaNodeCtor = BaklavaNodeBuilder.build();
       const baklavaNodeInstance = new baklavaNodeCtor() as any;
+      baklavaNodeInstance.$color = color;
       baklavaNodeInstance.$compute = new Promise(async resolve => {
         const { domElement, compute } = await ctor();
         if (domElement) {

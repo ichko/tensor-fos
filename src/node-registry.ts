@@ -6,6 +6,13 @@ import { TfJsVisRenderer } from './tensor-renderer/tfjs-vis';
 import * as tf from '@tensorflow/tfjs';
 import { memo } from './utils';
 
+const colors = {
+  model: '#f33c7d',
+  visual: 'white',
+  dataSrc: '#5fbf54',
+  util: '#ffa800',
+};
+
 const common = [
   nodeType({
     id: 'Mnist',
@@ -22,6 +29,7 @@ const common = [
         }),
       };
     },
+    color: colors.dataSrc,
   }),
 
   nodeType({
@@ -35,6 +43,7 @@ const common = [
         }),
       };
     },
+    color: colors.util,
   }),
 
   nodeType({
@@ -60,6 +69,7 @@ const common = [
         },
       };
     },
+    color: colors.model,
   }),
 
   nodeType({
@@ -84,6 +94,7 @@ const common = [
         },
       };
     },
+    color: colors.visual,
   }),
 
   nodeType({
@@ -105,6 +116,7 @@ const common = [
         },
       };
     },
+    color: colors.visual,
   }),
 
   nodeType({
@@ -119,6 +131,7 @@ const common = [
         compute: async () => ({ value: JSON.parse(element.value) }),
       };
     },
+    color: colors.util,
   }),
 ];
 
@@ -168,6 +181,7 @@ function exportTfJsNodes() {
 
   const objectInputArgNodes = objectInputArgDefs.map(def =>
     nodeType({
+      color: colors.model,
       id: `tf.layers.${def.func.name}`,
       ins: def.args?.map(arg => arg.name),
       outs: ['layer'],
@@ -184,6 +198,7 @@ function exportTfJsNodes() {
 
   const sequentialInputArgsNodes = sequentialInputArgsDefs.map(def =>
     nodeType({
+      color: colors.util,
       id: `tf.${def.func.name}`,
       ins: def.args?.map(arg => arg.name),
       outs: ['tensor'],
