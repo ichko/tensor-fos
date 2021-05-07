@@ -35,18 +35,24 @@ const InjectableOption = Vue.component('InjectableOption', {
 
 function injectCSS() {
   const css = `
+    .node-editor .background {
+      background-color: #4c4c4c;
+      background-image: linear-gradient(rgba(0,0,0,0.133333) 1px, transparent 1px),linear-gradient(90deg, rgba(0,0,0,0.133333) 1px, transparent 1px),linear-gradient(#444444 1px, transparent 1px),linear-gradient(90deg, #444444 1px, transparent 1px);
+    }
     .node {
       max-width: none;
       border-radius: 0;
+      box-shadow: 0 0 0 3px #000;
+      filter: none; // drop-shadow(0 0 3px rgba(0,0,0,0.8));
     }
     .node>.__title {
       border-radius: 0;
     }
     .node:hover {
-      box-shadow: 0 0 0 2px #666;
+      box-shadow: 0 0 0 3px #333;
     }
     .node.--selected {
-      box-shadow: 0 0 0 3px #28d4d8;
+      box-shadow: 0 0 0 4px #28d4d8;
     }
   `;
 
@@ -73,6 +79,9 @@ export class NodeEditor {
 
     const plugin = createBaklava(editorDiv);
     this.editor = plugin.editor;
+    plugin.backgroundGrid.subGridVisibleThreshold = 0;
+    plugin.backgroundGrid.gridSize = 30;
+    plugin.backgroundGrid.gridDivision = 1;
     this.engine = new Engine(
       false /* whether to automatically calculate on changes */
     );
