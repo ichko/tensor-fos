@@ -9,9 +9,17 @@ interface Context<I, O> {
   compute?: (i: I) => Promise<O>;
 }
 
+export type PortType = 'any' | 'bool' | 'json' | 'int';
+
+export interface Port<T> {
+  name: keyof T;
+  type: PortType;
+  defaultValue?: any;
+}
+
 interface NodeType<I, O> {
   id: string;
-  ins?: (keyof I)[];
+  ins?: (keyof I | Port<I>)[];
   outs?: (keyof O)[];
   ctor(): Promise<Context<I, O>>;
   color?: string;
@@ -147,13 +155,27 @@ export class NodeEditor {
     color,
   }: NodeType<I, O>) {
     let BaklavaNodeBuilder = new Core.NodeBuilder(id).setName(id);
-
-    ins.forEach(
-      inPort =>
-        (BaklavaNodeBuilder = BaklavaNodeBuilder.addInputInterface(
-          inPort as string
-        ))
+    const inNames = ins.map(i => (typeof i === 'object' ? i.name : i));
+    const inObjects = ins.map(i =>
+      typeof i === 'object'
+        ? i
+        : ({ name: i, type: 'any', defaultValue: undefined } as Port<any>)
     );
+
+    inObjects.forEach(({ name, type, defaultValue }) => {
+      const typeToOptionMap: Map<PortType, string | undefined> = new Map();
+      typeToOptionMap.set('any', undefined);
+      typeToOptionMap.set('bool', 'CheckboxOption');
+      typeToOptionMap.set('json', 'InputOption');
+
+      BaklavaNodeBuilder = BaklavaNodeBuilder.addInputInterface(
+        name as string,
+        typeToOptionMap.get(type),
+        defaultValue,
+        { type }
+      );
+    });
+
     outs.forEach(
       outPort =>
         (BaklavaNodeBuilder = BaklavaNodeBuilder.addOutputInterface(
@@ -168,12 +190,23 @@ export class NodeEditor {
       BaklavaNodeBuilder = BaklavaNodeBuilder.onCalculate(
         async (node, data) => {
           const values = await Promise.all(
-            ins.map(i => node.getInterface(i as string).value)
+            inNames.map(i => {
+              const interf = node.getInterface(i as string);
+              if (interf.type === 'json') {
+                try {
+                  return JSON.parse(interf.value);
+                } catch (e) {
+                  return interf.value;
+                }
+              }
+
+              return interf.value;
+            })
           );
           const calcOnce = node.getInterface('once').value;
 
           const inMap: { [key: string]: string } = {};
-          ins.forEach((inName, index) => {
+          inNames.forEach((inName, index) => {
             inMap[inName as string] = values[index];
           });
 
