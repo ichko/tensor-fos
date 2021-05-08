@@ -1,6 +1,7 @@
 import { Core, createBaklava, PluginEngine } from 'baklavajs';
 import { Engine } from '@baklavajs/plugin-engine';
 import { OptionPlugin } from '@baklavajs/plugin-options-vue';
+import { InterfaceTypePlugin } from '@baklavajs/plugin-interface-types';
 import Vue from 'vue';
 
 interface Context<I, O> {
@@ -41,18 +42,27 @@ function injectCSS() {
     }
     .node {
       max-width: none;
-      border-radius: 0;
+      border-radius: 5px;
       box-shadow: 0 0 0 3px #000;
       filter: none; // drop-shadow(0 0 3px rgba(0,0,0,0.8));
     }
     .node>.__title {
-      border-radius: 0;
+      border-radius: 5px 5px 0 0;
+      background: rgba(0, 0, 0, 0.65);
+      font-weight: bold;
     }
     .node:hover {
       box-shadow: 0 0 0 3px #333;
     }
     .node.--selected {
       box-shadow: 0 0 0 4px #28d4d8;
+    }
+
+    .dark-checkbox {
+      align-items: center;
+    }
+    .dark-checkbox.--checked .__checkmark-container {
+      background-color: #000000;
     }
   `;
 
@@ -70,6 +80,7 @@ export class NodeEditor {
   constructor() {
     injectCSS();
 
+    const intfTypePlugin = new InterfaceTypePlugin();
     this.domElement = document.createElement('div');
     this.domElement.style.width = '100%';
     this.domElement.style.height = '100%';
@@ -87,6 +98,7 @@ export class NodeEditor {
     );
     this.editor.use(this.engine);
     this.editor.use(new OptionPlugin());
+    this.editor.use(intfTypePlugin);
 
     plugin.registerOption('InjectableOption', InjectableOption);
 
@@ -150,21 +162,35 @@ export class NodeEditor {
     );
 
     const decoratedCtor = () => {
+      const UNSET_VALUE = Symbol('<unset_value>');
+      let memoizedValue: any = UNSET_VALUE;
+
       BaklavaNodeBuilder = BaklavaNodeBuilder.onCalculate(
         async (node, data) => {
           const values = await Promise.all(
             ins.map(i => node.getInterface(i as string).value)
           );
+          const calcOnce = node.getInterface('once').value;
 
           const inMap: { [key: string]: string } = {};
           ins.forEach((inName, index) => {
             inMap[inName as string] = values[index];
           });
 
+          let result: any = undefined;
           const compute = await (node as any).$compute;
           if (!compute) return;
 
-          const result = await compute(inMap);
+          if (calcOnce) {
+            if (memoizedValue === UNSET_VALUE) {
+              memoizedValue = await compute(inMap);
+            }
+
+            result = memoizedValue;
+          } else {
+            result = await compute(inMap);
+            memoizedValue = result;
+          }
 
           if (result) {
             Object.keys(result).forEach(key => {
@@ -176,7 +202,12 @@ export class NodeEditor {
         }
       );
 
-      const baklavaNodeCtor = BaklavaNodeBuilder.build();
+      const baklavaNodeCtor = BaklavaNodeBuilder.addInputInterface(
+        'once',
+        'CheckboxOption',
+        false,
+        { type: 'boolean' }
+      ).build();
       const baklavaNodeInstance = new baklavaNodeCtor() as any;
       baklavaNodeInstance.$color = color;
       baklavaNodeInstance.$compute = new Promise(async resolve => {

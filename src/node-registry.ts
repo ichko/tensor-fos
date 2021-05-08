@@ -7,10 +7,10 @@ import * as tf from '@tensorflow/tfjs';
 import { memo } from './utils';
 
 const colors = {
-  model: '#f33c7d',
+  model: '#ff629a',
   visual: 'white',
-  dataSrc: '#5fbf54',
-  util: '#ffa800',
+  dataSrc: '#7bd871',
+  util: '#ffbf42',
 };
 
 const common = [
@@ -83,14 +83,12 @@ const common = [
         },
         () => new TfJsVisRenderer({ type: 'heatmap' })
       );
-      let alreadySet = false;
 
       return {
         domElement: batchViewRenderer.domElement,
         compute: async ({ tensor }: { tensor: Tensor }) => {
-          if (alreadySet) return;
+          console.log('compute calc');
           batchViewRenderer.setTensor(tensor.reshape([4, 4, 28, 28]));
-          alreadySet = true;
         },
       };
     },
