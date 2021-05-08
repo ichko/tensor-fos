@@ -50,20 +50,21 @@ function injectCSS() {
     }
     .node {
       max-width: none;
-      border-radius: 5px;
+      border-radius: 0px;
       box-shadow: 0 0 0 3px #000;
-      filter: none; // drop-shadow(0 0 3px rgba(0,0,0,0.8));
+      filter: none; // drop-shadow(0 0 3px rgba(0,0,0,0.9));
     }
     .node>.__title {
-      border-radius: 5px 5px 0 0;
-      background: rgba(0, 0, 0, 0.65);
+      border-radius: 0;
+      background: rgba(0, 0, 0, 0.8);
       font-weight: bold;
+      text-transform: uppercase;
     }
     .node:hover {
-      box-shadow: 0 0 0 3px #333;
+      box-shadow: 0 0 0 3px #fff;
     }
     .node.--selected {
-      box-shadow: 0 0 0 4px #28d4d8;
+      box-shadow: 0 0 0 4px cyan;
     }
 
     .dark-checkbox {
@@ -117,6 +118,7 @@ export class NodeEditor {
       if (color) {
         nodeEl.style.background = color;
         nodeEl.style.color = 'black';
+        nodeEl.style.fontWeight = 'bold';
       }
 
       return node;
@@ -171,7 +173,7 @@ export class NodeEditor {
       BaklavaNodeBuilder = BaklavaNodeBuilder.addInputInterface(
         name as string,
         typeToOptionMap.get(type),
-        defaultValue,
+        JSON.stringify(defaultValue),
         { type }
       );
     });

@@ -7,10 +7,10 @@ import * as tf from '@tensorflow/tfjs';
 import { memo } from './utils';
 
 const colors = {
-  model: '#ff629a',
+  model: '#fb3079',
   visual: 'white',
-  dataSrc: '#7bd871',
-  util: '#ffbf42',
+  dataSrc: '#16ff85',
+  util: '#ffb316',
 };
 
 const common = [
@@ -43,10 +43,12 @@ const common = [
       const exampleBatch = (await trainDataset.next()).value;
 
       return {
-        compute: async () => ({
-          nextBatch: (await trainDataset.next()).value,
-          exampleBatch,
-        }),
+        compute: async () => {
+          return {
+            nextBatch: (await trainDataset.next()).value,
+            exampleBatch,
+          };
+        },
       };
     },
     color: colors.dataSrc,
@@ -129,7 +131,7 @@ const common = [
       return {
         domElement: predViewRenderer.domElement,
         compute: async ({ tensor }: { tensor: Tensor }) => {
-          predViewRenderer.setTensor(tensor.reshape([4, 4, 10]));
+          predViewRenderer.setTensor(tensor);
         },
       };
     },
