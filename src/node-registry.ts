@@ -1,5 +1,5 @@
 import { Tensor } from '@tensorflow/tfjs-core';
-import { NodeEditor, nodeType } from './node-editor';
+import { NodeEditor, nodeType, Port } from './node-editor';
 import * as ml from './ml';
 import { SmallMultiplesRenderer } from './tensor-renderer/small-multiples';
 import { TfJsVisRenderer } from './tensor-renderer/tfjs-vis';
@@ -14,6 +14,26 @@ const colors = {
 };
 
 const common = [
+  nodeType({
+    id: 'Reshape',
+    ins: ['inTensor', { name: 'shape', type: 'json' }],
+    outs: ['outTensor'],
+    ctor: async () => {
+      return {
+        compute: async ({
+          inTensor,
+          shape,
+        }: {
+          inTensor: Tensor;
+          shape: number[];
+        }) => {
+          return { outTensor: inTensor.reshape(shape) };
+        },
+      };
+    },
+    color: colors.util,
+  }),
+
   nodeType({
     id: 'Mnist',
     outs: ['nextBatch', 'exampleBatch'],
@@ -87,8 +107,7 @@ const common = [
       return {
         domElement: batchViewRenderer.domElement,
         compute: async ({ tensor }: { tensor: Tensor }) => {
-          console.log('compute calc');
-          batchViewRenderer.setTensor(tensor.reshape([4, 4, 28, 28]));
+          batchViewRenderer.setTensor(tensor);
         },
       };
     },
@@ -133,22 +152,16 @@ const common = [
   }),
 ];
 
-interface Arg {
-  name: string;
-  type?: 'int' | 'list-int';
-  default?: any;
-}
-
 interface NodeDef {
   func: any;
-  args?: Arg[];
+  args?: Port<any>[];
 }
 
 function exportTfJsNodes() {
   const objectInputArgDefs: NodeDef[] = [
     {
       func: tf.layers.dense,
-      args: [{ name: 'units', type: 'int', default: 10 }],
+      args: [{ name: 'units', type: 'int', defaultValue: 10 }],
     },
     {
       func: tf.layers.flatten,
@@ -157,23 +170,23 @@ function exportTfJsNodes() {
     {
       func: tf.layers.embedding,
       args: [
-        { name: 'inputDim', type: 'int', default: 10 },
-        { name: 'outputDim', type: 'int', default: 10 },
+        { name: 'inputDim', type: 'int', defaultValue: 10 },
+        { name: 'outputDim', type: 'int', defaultValue: 10 },
       ],
     },
   ];
   const sequentialInputArgsDefs: NodeDef[] = [
     {
       func: tf.rand,
-      args: [{ name: 'shape', type: 'list-int', default: [3, 5, 5] }],
+      args: [{ name: 'shape', type: 'json', defaultValue: [3, 5, 5] }],
     },
     {
       func: tf.randomNormal,
-      args: [{ name: 'shape', type: 'list-int', default: [3, 5, 5] }],
+      args: [{ name: 'shape', type: 'json', defaultValue: [3, 5, 5] }],
     },
     {
       func: tf.randomUniform,
-      args: [{ name: 'shape', type: 'list-int', default: [3, 5, 5] }],
+      args: [{ name: 'shape', type: 'json', defaultValue: [3, 5, 5] }],
     },
   ];
 
@@ -181,7 +194,7 @@ function exportTfJsNodes() {
     nodeType({
       color: colors.model,
       id: `tf.layers.${def.func.name}`,
-      ins: def.args?.map(arg => arg.name),
+      ins: def.args?.map(arg => ({ name: arg.name as string, type: arg.type })),
       outs: ['layer'],
       ctor: async () => {
         return {
@@ -198,7 +211,7 @@ function exportTfJsNodes() {
     nodeType({
       color: colors.util,
       id: `tf.${def.func.name}`,
-      ins: def.args?.map(arg => arg.name),
+      ins: def.args?.map(arg => ({ name: arg.name as string, type: arg.type })),
       outs: ['tensor'],
       ctor: async () => {
         return {
