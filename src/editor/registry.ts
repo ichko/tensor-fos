@@ -6,6 +6,9 @@ import { TfJsVisRenderer } from '../tensor-renderer/tfjs-vis';
 import * as tf from '@tensorflow/tfjs';
 import { memo } from '../utils';
 
+// import { ContainerReflection } from 'typedoc';
+// import { Type } from 'typedoc/dist/lib/models';
+
 const colors = {
   model: '#fb3079',
   visual: 'white',
@@ -239,7 +242,27 @@ export function registerNodeTypes(editor: NodeEditor) {
 }
 
 function getGeneratedNodeTypes() {
-  const generatedDocs = require('../../dist/generated-type-docs.json');
-  console.log(generatedDocs);
-  debugger;
+  const generatedDocs = require('../../dist/generated-type-docs.json') as any;
+
+  const functions: any[] = [];
+
+  function resolveType(type: any) {
+    return type;
+  }
+
+  generatedDocs.children?.forEach((node: any) => {
+    if (node.kindString === 'Function') {
+      node.signatures?.forEach((signatureNode: any) => {
+        const name = signatureNode.name;
+        const args = signatureNode.parameters?.map(({ name, type }: any) => ({
+          name,
+          type: resolveType(type),
+        }));
+
+        functions.push({ name, args });
+      });
+    }
+  });
+
+  console.log(functions);
 }
