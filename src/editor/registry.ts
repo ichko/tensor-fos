@@ -1,10 +1,10 @@
 import { Tensor } from '@tensorflow/tfjs-core';
-import { NodeEditor, nodeType, Port } from './node-editor';
-import * as ml from './ml';
-import { SmallMultiplesRenderer } from './tensor-renderer/small-multiples';
-import { TfJsVisRenderer } from './tensor-renderer/tfjs-vis';
+import { NodeEditor, nodeType, Port } from '.';
+import * as ml from '../ml';
+import { SmallMultiplesRenderer } from '../tensor-renderer/small-multiples';
+import { TfJsVisRenderer } from '../tensor-renderer/tfjs-vis';
 import * as tf from '@tensorflow/tfjs';
-import { memo } from './utils';
+import { memo } from '../utils';
 
 const colors = {
   model: '#fb3079',
@@ -231,8 +231,15 @@ function exportTfJsNodes() {
 
 export function registerNodeTypes(editor: NodeEditor) {
   const tfjsNodeTypes = exportTfJsNodes();
+  const generated = getGeneratedNodeTypes();
 
   [...common, ...tfjsNodeTypes].forEach(nodeType => {
     editor.registerNodeType(nodeType as any);
   });
+}
+
+function getGeneratedNodeTypes() {
+  const generatedDocs = require('../../dist/generated-type-docs.json');
+  console.log(generatedDocs);
+  debugger;
 }

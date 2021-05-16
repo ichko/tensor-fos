@@ -1,7 +1,7 @@
 import { makeStats } from './ui';
-import { NodeEditor } from './node-editor';
+import { NodeEditor } from './editor';
 
-import { registerNodeTypes } from './node-registry';
+import { registerNodeTypes } from './editor/registry';
 import { onCtlS, Persistance } from './utils';
 import { defaultEditorState } from './default-editor-state';
 
