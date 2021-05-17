@@ -243,6 +243,7 @@ export function registerNodeTypes(editor: NodeEditor) {
 
 function getGeneratedNodeTypes() {
   const generatedDocs = require('../../dist/generated-type-docs.json') as any;
+  console.log('>>>', generatedDocs);
 
   const functions: any[] = [];
 
@@ -253,7 +254,7 @@ function getGeneratedNodeTypes() {
   generatedDocs.children?.forEach((node: any) => {
     if (node.kindString === 'Function') {
       node.signatures?.forEach((signatureNode: any) => {
-        const name = signatureNode.name;
+        const name: string = signatureNode.name;
         const args = signatureNode.parameters?.map(({ name, type }: any) => ({
           name,
           type: resolveType(type),
