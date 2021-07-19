@@ -1,3 +1,4 @@
+import { zip } from './../utils';
 import { Tensor } from '@tensorflow/tfjs-core';
 import { NodeEditor, nodeType, Port } from '.';
 import * as ml from '../ml';
@@ -5,9 +6,6 @@ import { SmallMultiplesRenderer } from '../tensor-renderer/small-multiples';
 import { TfJsVisRenderer } from '../tensor-renderer/tfjs-vis';
 import * as tf from '@tensorflow/tfjs';
 import { memo } from '../utils';
-
-// import { ContainerReflection } from 'typedoc';
-// import { Type } from 'typedoc/dist/lib/models';
 
 const colors = {
   model: '#fb3079',
@@ -236,34 +234,72 @@ export function registerNodeTypes(editor: NodeEditor) {
   const tfjsNodeTypes = exportTfJsNodes();
   const generated = getGeneratedNodeTypes();
 
-  [...common, ...tfjsNodeTypes].forEach(nodeType => {
+  [...common, ...tfjsNodeTypes, ...generated].forEach(nodeType => {
     editor.registerNodeType(nodeType as any);
   });
 }
 
 function getGeneratedNodeTypes() {
-  const generatedDocs = require('../../dist/generated-type-docs.json') as any;
-  console.log('>>>', generatedDocs);
-
-  const functions: any[] = [];
+  const generatedDocs = require('../../dist/generated-type-docs.json');
+  console.log('input >>', generatedDocs);
+  const resolutions: any[] = [];
 
   function resolveType(type: any) {
-    return type;
+    console.log('T', type);
+
+    if (type.kindString === 'Project') {
+      type.children.forEach(resolveType);
+    } else if (type.kindString === 'Function') {
+      zip(type.signatures, type.sources)
+        .map(([sig, src]: [any, any]) => {
+          sig.src = src;
+          return sig;
+        })
+        .forEach(resolveType);
+    } else if (type.kindString === 'Call signature') {
+      const ins = type.parameters.flatMap((param: any) => {
+        if (param.name === '__namedParameters') {
+          if (param.type.declaration.kindString !== 'Type literal') {
+            console.error(param);
+            throw Error('Unsupported param type');
+          }
+
+          return param.type.declaration.children.map((c: any) => c.name);
+        }
+      });
+
+      let outs: string[] = [];
+      if (type.type.name === 'void') {
+        outs = [];
+      } else if (type.type.declaration.kindString === 'Type literal') {
+        outs = type.type.declaration.children.map((c: any) => c.name);
+      } else {
+        console.error(type);
+        throw Error('Unsupported return type');
+      }
+
+      const newNodeType = nodeType({
+        id: type.name,
+        ins: ins,
+        outs: outs,
+        ctor: async () => {
+          const module = require('src/editor/nodes-to-generate/tf');
+          const handler = module[type.name];
+          return {
+            compute: handler,
+          };
+        },
+        color: colors.util,
+      });
+
+      resolutions.push(newNodeType);
+    }
+
+    return null;
   }
 
-  generatedDocs.children?.forEach((node: any) => {
-    if (node.kindString === 'Function') {
-      node.signatures?.forEach((signatureNode: any) => {
-        const name: string = signatureNode.name;
-        const args = signatureNode.parameters?.map(({ name, type }: any) => ({
-          name,
-          type: resolveType(type),
-        }));
+  resolveType(generatedDocs);
 
-        functions.push({ name, args });
-      });
-    }
-  });
-
-  console.log(functions);
+  console.log('resolution >>', resolutions);
+  return resolutions;
 }
