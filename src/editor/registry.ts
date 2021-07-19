@@ -242,63 +242,54 @@ export function registerNodeTypes(editor: NodeEditor) {
 function getGeneratedNodeTypes() {
   const generatedDocs = require('../../dist/generated-type-docs.json');
   console.log('input >>', generatedDocs);
-  const resolutions: any[] = [];
 
-  function resolveType(type: any) {
+  function resolveType(type: any): any {
     console.log('T', type);
 
-    if (type.kindString === 'Project') {
-      type.children.forEach(resolveType);
-    } else if (type.kindString === 'Function') {
-      zip(type.signatures, type.sources)
-        .map(([sig, src]: [any, any]) => {
-          sig.src = src;
-          return sig;
-        })
-        .forEach(resolveType);
-    } else if (type.kindString === 'Call signature') {
-      const ins = type.parameters.flatMap((param: any) => {
-        if (param.name === '__namedParameters') {
-          if (param.type.declaration.kindString !== 'Type literal') {
-            console.error(param);
-            throw Error('Unsupported param type');
+    switch (type.kindString) {
+      case 'Project':
+        return type.children.flatMap(resolveType).filter((c: any) => !!c);
+      case 'Function':
+        return zip(type.signatures, type.sources)
+          .map(([sig, src]: [any, any]) => {
+            sig.src = src;
+            return sig;
+          })
+          .flatMap(resolveType);
+      case 'Type literal':
+        return type.children.map((c: any) => ({ name: c.name, type: 'json' }));
+      case 'Parameter':
+        if (type.name === '__namedParameters') {
+          return resolveType(type.type.declaration);
+        } else {
+          if (['array'].includes(type.type.type)) {
+            return [{ name: type.name, type: 'json' }];
           }
-
-          return param.type.declaration.children.map((c: any) => c.name);
+          return [type.name];
         }
-      });
+      case 'Call signature':
+        const ins = type.parameters.flatMap(resolveType);
+        let outs = resolveType(type.type.declaration).map((c: any) => c.name);
 
-      let outs: string[] = [];
-      if (type.type.name === 'void') {
-        outs = [];
-      } else if (type.type.declaration.kindString === 'Type literal') {
-        outs = type.type.declaration.children.map((c: any) => c.name);
-      } else {
-        console.error(type);
-        throw Error('Unsupported return type');
-      }
-
-      const newNodeType = nodeType({
-        id: type.name,
-        ins: ins,
-        outs: outs,
-        ctor: async () => {
-          const module = require('src/editor/nodes-to-generate/tf');
-          const handler = module[type.name];
-          return {
-            compute: handler,
-          };
-        },
-        color: colors.util,
-      });
-
-      resolutions.push(newNodeType);
+        return nodeType({
+          id: type.name,
+          ins: ins,
+          outs: outs,
+          ctor: async () => {
+            const module = require('src/editor/to-generate');
+            const handler = module[type.name];
+            return {
+              compute: handler,
+            };
+          },
+          color: colors.util,
+        });
+      default:
+        console.warn('Unsupported type', type);
     }
-
-    return null;
   }
 
-  resolveType(generatedDocs);
+  const resolutions = resolveType(generatedDocs);
 
   console.log('resolution >>', resolutions);
   return resolutions;
