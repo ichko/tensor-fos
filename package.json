@@ -4,7 +4,8 @@
   "description": "Visualize tensor computations in the browser",
   "main": "index.js",
   "scripts": {
-    "gen": "npx typedoc src/editor/nodes-to-generate --json ./dist/generated-type-docs.json",
+    "gen": "typedoc src/editor/nodes-to-generate --json ./dist/generated-type-docs.json",
+    "gen:watch": "npm run gen -- --watch",
     "build": "npm run gen && webpack",
     "build:watch": "webpack -w",
     "start": "webpack serve --open --host 0.0.0.0",
