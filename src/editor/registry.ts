@@ -6,55 +6,9 @@ import { SmallMultiplesRenderer } from '../tensor-renderer/small-multiples';
 import { TfJsVisRenderer } from '../tensor-renderer/tfjs-vis';
 import * as tf from '@tensorflow/tfjs';
 import { memo } from '../utils';
-
-const colors = {
-  model: '#fb3079',
-  visual: 'white',
-  dataSrc: '#16ff85',
-  util: '#ffb316',
-};
+import { colors } from 'src/editor/to-generate';
 
 const common = [
-  nodeType({
-    id: 'Reshape',
-    ins: ['inTensor', { name: 'shape', type: 'json' }],
-    outs: ['outTensor'],
-    ctor: async () => {
-      return {
-        compute: async ({
-          inTensor,
-          shape,
-        }: {
-          inTensor: Tensor;
-          shape: number[];
-        }) => {
-          return { outTensor: inTensor.reshape(shape) };
-        },
-      };
-    },
-    color: colors.util,
-  }),
-
-  nodeType({
-    id: 'Mnist',
-    outs: ['nextBatch', 'exampleBatch'],
-    ctor: async () => {
-      const mnist = ml.data.loadMnist();
-      const trainDataset = await mnist({ bs: 16 }).iterator();
-      const exampleBatch = (await trainDataset.next()).value;
-
-      return {
-        compute: async () => {
-          return {
-            nextBatch: (await trainDataset.next()).value,
-            exampleBatch,
-          };
-        },
-      };
-    },
-    color: colors.dataSrc,
-  }),
-
   nodeType({
     id: 'Select Batch Input',
     ins: ['batch'],
