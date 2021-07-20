@@ -184,18 +184,20 @@ function exportTfJsNodes() {
   return [...objectInputArgNodes, ...sequentialInputArgsNodes];
 }
 
-export function registerNodeTypes(editor: NodeEditor) {
+export async function registerNodeTypes(editor: NodeEditor) {
   const tfjsNodeTypes = exportTfJsNodes();
-  const generated = getGeneratedNodeTypes();
+  const generated = await getGeneratedNodeTypes();
 
   [...common, ...tfjsNodeTypes, ...generated].forEach(nodeType => {
     editor.registerNodeType(nodeType as any);
   });
 }
 
-function getGeneratedNodeTypes() {
+async function getGeneratedNodeTypes() {
   const generatedDocs = require('../../dist/generated-type-docs.json');
   console.log('input >>', generatedDocs);
+
+  const module = await require('src/editor/to-generate');
 
   function resolveType(type: any): any {
     console.log('T', type);
@@ -212,6 +214,7 @@ function getGeneratedNodeTypes() {
           .flatMap(resolveType);
       case 'Type literal':
         return type.children.map((c: any) => ({ name: c.name, type: 'json' }));
+      case 'Property':
       case 'Parameter':
         if (type.name === '__namedParameters') {
           return resolveType(type.type.declaration);
@@ -221,19 +224,40 @@ function getGeneratedNodeTypes() {
           }
           return [type.name];
         }
-      case 'Call signature':
-        const ins = type.parameters.flatMap(resolveType);
-        let outs = resolveType(type.type.declaration).map((c: any) => c.name);
+      case 'Class':
+        const [callMethod] = type.children.find(
+          (c: any) => c.name === 'call'
+        ).signatures;
+        const instance = new module[type.name]();
 
         return nodeType({
           id: type.name,
-          ins: ins,
-          outs: outs,
+          ins: callMethod.parameters?.flatMap(resolveType),
+          outs: resolveType(callMethod.type.typeArguments[0].declaration).map(
+            (c: any) => c.name
+          ),
+
           ctor: async () => {
-            const module = require('src/editor/to-generate');
+            await instance?.init();
+            return {
+              compute: args => {
+                return instance?.call(args);
+              },
+            };
+          },
+          color: instance.color,
+        });
+      case 'Call signature':
+        return nodeType({
+          id: type.name,
+          ins: type.parameters.flatMap(resolveType),
+          outs: resolveType(type.type.declaration).map((c: any) => c.name),
+          ctor: async () => {
             const handler = module[type.name];
             return {
-              compute: handler,
+              compute: args => {
+                return handler(args);
+              },
             };
           },
           color: colors.util,
