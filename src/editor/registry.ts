@@ -87,7 +87,7 @@ export async function registerNodeTypes(editor: NodeEditor) {
   const tfjsNodeTypes = exportTfJsNodes();
   const generated = await getGeneratedNodeTypes();
 
-  [...common, ...tfjsNodeTypes, ...generated].forEach(nodeType => {
+  [...tfjsNodeTypes, ...generated].forEach(nodeType => {
     editor.registerNodeType(nodeType as any);
   });
 }
@@ -128,19 +128,23 @@ async function getGeneratedNodeTypes() {
           (c: any) => c.name === 'call'
         ).signatures;
         const instance = new module[type.name]();
+        const ta = callMethod.type.typeArguments[0];
+        const outs =
+          ta.name === 'void'
+            ? []
+            : resolveType(ta.declaration).map((c: any) => c.name);
 
         return nodeType({
           id: type.name,
           ins: callMethod.parameters?.flatMap(resolveType),
-          outs: resolveType(callMethod.type.typeArguments[0].declaration).map(
-            (c: any) => c.name
-          ),
+          outs: outs,
 
           ctor: async () => {
-            await instance?.init();
+            await instance.init?.();
             return {
+              domElement: instance.domElement,
               compute: args => {
-                return instance?.call(args);
+                return instance.call?.(args);
               },
             };
           },
