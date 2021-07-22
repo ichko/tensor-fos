@@ -26,6 +26,22 @@ export function reshape({
   return { out: tensor.reshape(shape) };
 }
 
+export class Once {
+  value: any;
+
+  constructor() {
+    this.value = undefined;
+  }
+
+  async lazy({ inp }: { inp: () => any }) {
+    if (this.value === undefined) {
+      this.value = await inp();
+    }
+
+    return { out: this.value };
+  }
+}
+
 export class Mnist {
   trainDataset: any;
   exampleBatch: any;
