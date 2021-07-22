@@ -229,12 +229,7 @@ export class NodeEditor {
         }
       );
 
-      const baklavaNodeCtor = BaklavaNodeBuilder.addInputInterface(
-        'once',
-        'CheckboxOption',
-        false,
-        { type: 'boolean' }
-      ).build();
+      const baklavaNodeCtor = BaklavaNodeBuilder.build();
 
       const baklavaNodeInstance = new baklavaNodeCtor() as any;
       baklavaNodeInstance.$color = color;
