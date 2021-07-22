@@ -1,6 +1,7 @@
 import { zip } from './../utils';
 import { NodeEditor, nodeType } from '.';
 import { colors } from 'src/editor/to-generate';
+import { callUnwrap } from './utils';
 
 export async function registerNodeTypes(editor: NodeEditor) {
   const generated = await getGeneratedNodeTypes();
@@ -15,6 +16,11 @@ async function getGeneratedNodeTypes() {
   const module = await require('src/editor/to-generate');
 
   function resolveType(type: any): any {
+    if (type.name.startsWith('$')) {
+      console.info('skipping type:', type.name);
+      return;
+    }
+
     switch (type.kindString) {
       case 'Project':
         return type.children.flatMap(resolveType).filter((c: any) => !!c);
@@ -57,9 +63,9 @@ async function getGeneratedNodeTypes() {
             await instance.init?.();
             return {
               domElement: instance.domElement,
-              compute: args => {
+              compute: callUnwrap(args => {
                 return instance.call?.(args);
-              },
+              }),
             };
           },
           color: instance.color,
@@ -68,13 +74,16 @@ async function getGeneratedNodeTypes() {
         return nodeType({
           id: type.name,
           ins: type.parameters.flatMap(resolveType),
-          outs: resolveType(type.type.declaration).map((c: any) => c.name),
+          outs:
+            type.type.name === 'Promise'
+              ? []
+              : resolveType(type.type.declaration).map((c: any) => c.name),
           ctor: async () => {
             const handler = module[type.name];
             return {
-              compute: args => {
+              compute: callUnwrap(args => {
                 return handler(args);
-              },
+              }),
             };
           },
           color: colors.util,
