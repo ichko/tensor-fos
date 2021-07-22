@@ -45,7 +45,7 @@ async function getGeneratedNodeTypes() {
         }
       case 'Class':
         const [callMethod] = type.children.find(
-          (c: any) => c.name === 'call'
+          (c: any) => c.name === 'call' || c.name === 'lazy'
         ).signatures;
         const instance = new module[type.name]();
         const ta = callMethod.type.typeArguments[0];
@@ -63,9 +63,10 @@ async function getGeneratedNodeTypes() {
             await instance.init?.();
             return {
               domElement: instance.domElement,
-              compute: callUnwrap(args => {
-                return instance.call?.(args);
-              }),
+              compute:
+                callMethod.name === 'call'
+                  ? callUnwrap(args => instance.call(args))
+                  : args => instance.lazy(args),
             };
           },
           color: instance.color,
