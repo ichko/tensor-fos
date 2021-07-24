@@ -35,7 +35,7 @@ window.onload = async () => {
   const editor = new NodeEditor();
   document.body.appendChild(editor.domElement);
 
-  registerNodeTypes(editor);
+  await registerNodeTypes(editor);
   manageNodeEditorState(editor);
 
   function loop() {

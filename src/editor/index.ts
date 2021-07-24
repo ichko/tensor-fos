@@ -186,9 +186,6 @@ export class NodeEditor {
     );
 
     const decoratedCtor = () => {
-      const UNSET_VALUE = Symbol('<unset_value>');
-      let memoizedValue: any = UNSET_VALUE;
-
       BaklavaNodeBuilder = BaklavaNodeBuilder.onCalculate(
         async (node, data) => {
           const values = await Promise.all(
@@ -205,44 +202,35 @@ export class NodeEditor {
               return interf.value;
             })
           );
-          const calcOnce = node.getInterface('once').value;
 
           const inMap: { [key: string]: string } = {};
           inNames.forEach((inName, index) => {
             inMap[inName as string] = values[index];
           });
 
-          let result: any = undefined;
           const compute = await (node as any).$compute;
           if (!compute) return;
 
-          if (calcOnce) {
-            if (memoizedValue === UNSET_VALUE) {
-              memoizedValue = await compute(inMap);
-            }
+          const unset = Symbol('unset');
+          let result: any = unset;
+          (outs as any[]).forEach(key => {
+            node.getInterface(key).value = async () => {
+              if (result === unset) {
+                result = await compute(inMap);
+              }
 
-            result = memoizedValue;
-          } else {
-            result = await compute(inMap);
-            memoizedValue = result;
+              return result[key];
+            };
+          });
+
+          if (outs.length === 0) {
+            await compute(inMap);
           }
-
-          if (result) {
-            Object.keys(result).forEach(key => {
-              node.getInterface(key).value = result[key];
-            });
-          }
-
-          return result;
         }
       );
 
-      const baklavaNodeCtor = BaklavaNodeBuilder.addInputInterface(
-        'once',
-        'CheckboxOption',
-        false,
-        { type: 'boolean' }
-      ).build();
+      const baklavaNodeCtor = BaklavaNodeBuilder.build();
+
       const baklavaNodeInstance = new baklavaNodeCtor() as any;
       baklavaNodeInstance.$color = color;
       baklavaNodeInstance.$compute = new Promise(async resolve => {

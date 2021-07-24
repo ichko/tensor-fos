@@ -9,6 +9,7 @@
     "build": "npm run gen && webpack",
     "build:watch": "webpack -w",
     "start": "webpack serve --open --host 0.0.0.0",
+    "dev": "tmex -n --transpose --layout=111 build:watch start gen:watch",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -58,6 +59,7 @@
     "regl": "^2.1.0",
     "seedrandom": "^3.0.5",
     "stats.js": "^0.17.0",
+    "tmex": "^1.0.8",
     "uplot": "^1.6.8",
     "vue": "^2.6.12"
   }
