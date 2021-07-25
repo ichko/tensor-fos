@@ -4,6 +4,7 @@ import { Tensor } from '@tensorflow/tfjs-core';
 export { layers as tfLayers } from '@tensorflow/tfjs';
 import * as tf from '@tensorflow/tfjs';
 import * as ml from 'src//ml';
+import { NodeEditor } from '.';
 
 export const colors = {
   model: '#fb3079',
@@ -29,7 +30,7 @@ export function reshape({
 export class Once {
   value: any;
 
-  constructor() {
+  constructor(editor: NodeEditor) {
     this.value = undefined;
   }
 
@@ -65,7 +66,7 @@ export class MnistClassifier {
   model: ml.MnistClassifier.Model;
   color = colors.model;
 
-  constructor() {
+  constructor(editor: NodeEditor) {
     this.model = new ml.MnistClassifier.Model();
     this.model.net.summary();
   }
@@ -96,7 +97,7 @@ export class Heatmap {
     return this.renderer.domElement;
   }
 
-  constructor() {
+  constructor(editor: NodeEditor) {
     this.renderer = new SmallMultiplesRenderer(
       {
         nDimsEntity: 2,
@@ -119,7 +120,7 @@ export class BarChart {
     return this.renderer.domElement;
   }
 
-  constructor() {
+  constructor(editor: NodeEditor) {
     this.renderer = new SmallMultiplesRenderer(
       {
         nDimsEntity: 1,
@@ -131,5 +132,30 @@ export class BarChart {
 
   async call({ tensor }: { tensor: Tensor }) {
     this.renderer.setTensor(tensor);
+  }
+}
+
+export class Step {
+  button: HTMLButtonElement;
+
+  get domElement() {
+    return this.button;
+  }
+
+  constructor(editor: NodeEditor) {
+    this.button = document.createElement('button');
+    this.button.innerText = 'Play';
+
+    let play = false;
+    this.button.onclick = () => {
+      play = !play;
+      this.button.innerText = play ? 'Pause' : 'Play';
+    };
+
+    setInterval(() => {
+      if (play) {
+        editor.resolve();
+      }
+    }, 100);
   }
 }
