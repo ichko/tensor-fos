@@ -4,14 +4,14 @@ import { colors } from 'src/editor/to-generate';
 import { callUnwrap } from './utils';
 
 export async function registerNodeTypes(editor: NodeEditor) {
-  const generated = await getGeneratedNodeTypes();
+  const generated = await getGeneratedNodeTypes(editor);
 
   [...generated].forEach(nodeType => {
     editor.registerNodeType(nodeType as any);
   });
 }
 
-async function getGeneratedNodeTypes() {
+async function getGeneratedNodeTypes(editor: NodeEditor) {
   const generatedDocs = require('/dist/generated-type-docs.json');
   const module = await require('src/editor/to-generate');
 
@@ -44,19 +44,19 @@ async function getGeneratedNodeTypes() {
           return [type.name];
         }
       case 'Class':
-        const [callMethod] = type.children.find(
-          (c: any) => c.name === 'call' || c.name === 'lazy'
-        ).signatures;
-        const instance = new module[type.name]();
-        const ta = callMethod.type.typeArguments[0];
+        const [callMethod] =
+          type.children.find((c: any) => c.name === 'call' || c.name === 'lazy')
+            ?.signatures || [];
+        const instance = new module[type.name](editor);
+        const ta = callMethod?.type?.typeArguments?.[0];
         const outs =
-          ta.name === 'void'
+          ta?.name === 'void' || ta === undefined
             ? []
             : resolveType(ta.declaration).map((c: any) => c.name);
 
         return nodeType({
           id: type.name,
-          ins: callMethod.parameters?.flatMap(resolveType),
+          ins: callMethod?.parameters?.flatMap(resolveType),
           outs: outs,
 
           ctor: async () => {
@@ -64,9 +64,9 @@ async function getGeneratedNodeTypes() {
             return {
               domElement: instance.domElement,
               compute:
-                callMethod.name === 'call'
+                callMethod?.name === 'call'
                   ? callUnwrap(args => instance.call(args))
-                  : args => instance.lazy(args),
+                  : args => instance.lazy?.(args),
             };
           },
           color: instance.color,

@@ -46,7 +46,11 @@ function injectCSS() {
   const css = `
     .node-editor .background {
       background-color: #4c4c4c;
-      background-image: linear-gradient(rgba(0,0,0,0.133333) 1px, transparent 1px),linear-gradient(90deg, rgba(0,0,0,0.133333) 1px, transparent 1px),linear-gradient(#444444 1px, transparent 1px),linear-gradient(90deg, #444444 1px, transparent 1px);
+      background-image:
+        linear-gradient(rgba(0,0,0,0.133333) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,0,0,0.133333) 1px, transparent 1px),
+        linear-gradient(#444444 1px, transparent 1px),
+        linear-gradient(90deg, #444444 1px, transparent 1px);
     }
     .node {
       max-width: none;
@@ -123,30 +127,6 @@ export class NodeEditor {
 
       return node;
     });
-
-    this.registerNodeType({
-      id: 'Step',
-      ctor: async () => {
-        const button = document.createElement('button');
-        button.innerText = 'Play';
-
-        let play = false;
-        button.onclick = () => {
-          play = !play;
-          button.innerText = play ? 'Pause' : 'Play';
-        };
-
-        setInterval(() => {
-          if (play) {
-            this.resolve();
-          }
-        }, 100);
-
-        return { domElement: button };
-      },
-    });
-
-    this.addNode({ id: 'Step', pos: { x: 20, y: 20 } });
   }
 
   registerNodeType<I, O>({

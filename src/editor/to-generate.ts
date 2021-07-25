@@ -4,6 +4,7 @@ import { Tensor } from '@tensorflow/tfjs-core';
 export { layers as tfLayers } from '@tensorflow/tfjs';
 import * as tf from '@tensorflow/tfjs';
 import * as ml from 'src//ml';
+import { NodeEditor } from '.';
 
 export const colors = {
   model: '#fb3079',
@@ -131,5 +132,30 @@ export class BarChart {
 
   async call({ tensor }: { tensor: Tensor }) {
     this.renderer.setTensor(tensor);
+  }
+}
+
+export class Step {
+  button: HTMLButtonElement;
+
+  get domElement() {
+    return this.button;
+  }
+
+  constructor(editor: NodeEditor) {
+    this.button = document.createElement('button');
+    this.button.innerText = 'Play';
+
+    let play = false;
+    this.button.onclick = () => {
+      play = !play;
+      this.button.innerText = play ? 'Pause' : 'Play';
+    };
+
+    setInterval(() => {
+      if (play) {
+        editor.resolve();
+      }
+    }, 100);
   }
 }
