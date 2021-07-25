@@ -30,7 +30,7 @@ export function reshape({
 export class Once {
   value: any;
 
-  constructor(editor: NodeEditor) {
+  constructor() {
     this.value = undefined;
   }
 
@@ -66,7 +66,7 @@ export class MnistClassifier {
   model: ml.MnistClassifier.Model;
   color = colors.model;
 
-  constructor(editor: NodeEditor) {
+  constructor() {
     this.model = new ml.MnistClassifier.Model();
     this.model.net.summary();
   }
@@ -97,7 +97,7 @@ export class Heatmap {
     return this.renderer.domElement;
   }
 
-  constructor(editor: NodeEditor) {
+  constructor() {
     this.renderer = new SmallMultiplesRenderer(
       {
         nDimsEntity: 2,
@@ -120,7 +120,7 @@ export class BarChart {
     return this.renderer.domElement;
   }
 
-  constructor(editor: NodeEditor) {
+  constructor() {
     this.renderer = new SmallMultiplesRenderer(
       {
         nDimsEntity: 1,
