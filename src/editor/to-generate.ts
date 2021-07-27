@@ -5,17 +5,8 @@ export { layers as tfLayers } from '@tensorflow/tfjs';
 import * as tf from '@tensorflow/tfjs';
 import * as ml from 'src//ml';
 import { NodeEditor } from '.';
-
-export const colors = {
-  model: '#fb3079',
-  visual: 'white',
-  dataSrc: '#16ff85',
-  util: '#ffb316',
-};
-
-export function add({ a, b }: { a: number; b: number }) {
-  return { c: a + b };
-}
+import { colors } from './registry';
+import { Element, html } from './element';
 
 export function reshape({
   tensor,
@@ -40,6 +31,52 @@ export class Once {
     }
 
     return { out: this.value };
+  }
+}
+
+export class Layer {
+  container: Element;
+
+  layersMap = {
+    dense: tf.layers.dense,
+    conv2d: tf.layers.conv2d,
+    flatten: tf.layers.flatten,
+
+    relu: tf.layers.reLU,
+    sigmoid: tf.sigmoid,
+    softmax: tf.softmax,
+    tanh: tf.tanh,
+
+    batchNorm: tf.layers.batchNormalization,
+  };
+
+  get domElement() {
+    return this.container.raw;
+  }
+
+  constructor() {
+    this.container = html(`
+      <select>
+      ${Object.keys(this.layersMap).map(
+        name => `<option value="${name}">${name}</option>`
+      )}
+      </select>
+      <div></div>
+    `);
+
+    this.container.select('select').on('change', e => {
+      console.log(e);
+    });
+
+    this.setLayer('dense');
+  }
+
+  setLayer(key: string) {
+    this.container.select('div').raw.innerHTML = ``;
+  }
+
+  call({ input }: { input: Tensor }) {
+    return { out: input };
   }
 }
 

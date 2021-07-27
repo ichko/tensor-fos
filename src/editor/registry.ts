@@ -1,7 +1,13 @@
 import { zip } from './../utils';
 import { NodeEditor, nodeType } from '.';
-import { colors } from 'src/editor/to-generate';
 import { callUnwrap } from './utils';
+
+export const colors = {
+  model: '#fb3079',
+  visual: 'white',
+  dataSrc: '#16ff85',
+  util: '#ffb316',
+};
 
 export async function registerNodeTypes(editor: NodeEditor) {
   const generated = await getGeneratedNodeTypes(editor);
