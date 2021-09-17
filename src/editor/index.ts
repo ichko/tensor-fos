@@ -79,22 +79,22 @@ function injectCSS() {
       background-color: #000000;
     }
     .node-interface .__port {
-      width: 16px;
-      height: 16px;  
+      width: 10px;
+      height: 10px;
+      box-shadow: 0 0 0 4px #666;
     }
     .node-interface.--output .__port {
-      right: -20px;
-      top: 1px;
-      border: 4px solid #666;
+      right: -18px;
+      top: 5px;
+      box-shadow: 0 0 0 4px #666;
     }
     .node-interface.--input .__port {
-      left: -20px;
-      top: -1px;
-      border: 4px solid #666;
+      left: -18px;
+      top: 5px;
     }
     .connection {
       stroke: #666;
-      stroke-width: 5px;
+      stroke-width: 3px;
     }
   `;
 
@@ -270,31 +270,6 @@ export class NodeEditor {
       fromNode.getInterface(fromInterface),
       toNode.getInterface(toInterface)
     );
-  }
-
-  addNode({
-    id,
-    title = undefined,
-    pos = { x: 0, y: 0 },
-    width = undefined,
-  }: {
-    id: string;
-    title?: string;
-    pos?: { x: number; y: number };
-    width?: number;
-  }) {
-    if (!this.customNodesMap[id]) {
-      throw new Error(`Unknown node type ${id}`);
-    }
-
-    const ctor = this.customNodesMap[id];
-    const instance = ctor();
-    this.editor.addNode(instance);
-
-    instance.name = title || id;
-    (instance as any).position = pos;
-
-    return instance;
   }
 
   exportState(): object {
