@@ -3,10 +3,10 @@ import { NodeEditor, nodeType } from '.';
 import { callUnwrap } from './utils';
 
 export const colors = {
-  model: '#fb3079',
+  model: '#ff2867',
   visual: 'white',
   dataSrc: '#16ff85',
-  util: '#ffb316',
+  util: '#fea933',
 };
 
 export async function registerNodeTypes(editor: NodeEditor) {

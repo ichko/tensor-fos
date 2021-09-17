@@ -45,30 +45,31 @@ const InjectableOption = Vue.component('InjectableOption', {
 function injectCSS() {
   const css = `
     .node-editor .background {
-      background-color: #4c4c4c;
+      background-color: #000;
       background-image:
         linear-gradient(rgba(0,0,0,0.133333) 1px, transparent 1px),
         linear-gradient(90deg, rgba(0,0,0,0.133333) 1px, transparent 1px),
-        linear-gradient(#444444 1px, transparent 1px),
-        linear-gradient(90deg, #444444 1px, transparent 1px);
+        linear-gradient(#222 1px, transparent 1px),
+        linear-gradient(90deg, #222 1px, transparent 1px);
     }
     .node {
       max-width: none;
       border-radius: 0px;
-      box-shadow: 0 0 0 3px #000;
+      box-shadow: 0 0 0 5px #666;
       filter: none; // drop-shadow(0 0 3px rgba(0,0,0,0.9));
     }
     .node>.__title {
       border-radius: 0;
-      background: rgba(0, 0, 0, 0.8);
+      padding: 8px;
+      background: #333;
       font-weight: bold;
       text-transform: uppercase;
     }
     .node:hover {
-      box-shadow: 0 0 0 3px #fff;
+      box-shadow: 0 0 0 5px #999;
     }
     .node.--selected {
-      box-shadow: 0 0 0 4px cyan;
+      box-shadow: 0 0 0 6px #ffe80c;
     }
 
     .dark-checkbox {
@@ -76,6 +77,24 @@ function injectCSS() {
     }
     .dark-checkbox.--checked .__checkmark-container {
       background-color: #000000;
+    }
+    .node-interface .__port {
+      width: 16px;
+      height: 16px;  
+    }
+    .node-interface.--output .__port {
+      right: -20px;
+      top: 1px;
+      border: 4px solid #666;
+    }
+    .node-interface.--input .__port {
+      left: -20px;
+      top: -1px;
+      border: 4px solid #666;
+    }
+    .connection {
+      stroke: #666;
+      stroke-width: 5px;
     }
   `;
 
