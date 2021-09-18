@@ -1,6 +1,5 @@
 import { zip } from './../utils';
 import { NodeEditor, nodeType } from '.';
-import { callUnwrap } from './utils';
 
 export const colors = {
   model: '#ff2867',
@@ -51,8 +50,7 @@ async function getGeneratedNodeTypes(editor: NodeEditor) {
         }
       case 'Class':
         const [callMethod] =
-          type.children.find((c: any) => c.name === 'call' || c.name === 'lazy')
-            ?.signatures || [];
+          type.children.find((c: any) => c.name === 'call')?.signatures || [];
         const instance = new module[type.name](editor);
         const ta = callMethod?.type?.typeArguments?.[0];
         const outs =
@@ -69,10 +67,7 @@ async function getGeneratedNodeTypes(editor: NodeEditor) {
             await instance.init?.();
             return {
               domElement: instance.domElement,
-              compute:
-                callMethod?.name === 'call'
-                  ? callUnwrap(args => instance.call(args))
-                  : args => instance.lazy?.(args),
+              compute: args => instance.call?.(args),
             };
           },
           color: instance.color,
@@ -88,9 +83,7 @@ async function getGeneratedNodeTypes(editor: NodeEditor) {
           ctor: async () => {
             const handler = module[type.name];
             return {
-              compute: callUnwrap(args => {
-                return handler(args);
-              }),
+              compute: args => handler(args),
             };
           },
           color: colors.util,
