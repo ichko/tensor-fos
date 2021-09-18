@@ -111,14 +111,14 @@ export function selectBatchX({ batch }: { batch: any }) {
 }
 
 export class Heatmap {
-  renderer: SmallMultiplesRenderer<any>;
+  renderer!: SmallMultiplesRenderer<any>;
   color = colors.visual;
 
   get domElement() {
     return this.renderer.domElement;
   }
 
-  constructor() {
+  init() {
     this.renderer = new SmallMultiplesRenderer(
       {
         nDimsEntity: 2,
@@ -134,14 +134,14 @@ export class Heatmap {
 }
 
 export class BarChart {
-  renderer: SmallMultiplesRenderer<any>;
+  renderer!: SmallMultiplesRenderer<any>;
   color = colors.visual;
 
   get domElement() {
     return this.renderer.domElement;
   }
 
-  constructor() {
+  init() {
     this.renderer = new SmallMultiplesRenderer(
       {
         nDimsEntity: 1,

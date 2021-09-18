@@ -76,9 +76,8 @@ export namespace MnistClassifier {
 
     async optimStep(batch: Batch) {
       const returnCost = true;
-      return optimizer
-        .minimize(() => this.loss(batch), returnCost)
-        ?.dataSync()[0] as number;
+      const loss = optimizer.minimize(() => this.loss(batch), returnCost);
+      return loss?.dataSync()[0] as number;
     }
   }
 }
