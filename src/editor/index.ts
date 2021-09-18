@@ -4,28 +4,20 @@ import { OptionPlugin } from '@baklavajs/plugin-options-vue';
 import { InterfaceTypePlugin } from '@baklavajs/plugin-interface-types';
 import Vue from 'vue';
 
-interface Context<I, O> {
+interface Context {
   domElement?: HTMLElement;
-  compute?: (i: I) => Promise<O>;
+  compute?: (i: any) => any;
 }
 
-export type PortType = 'any' | 'bool' | 'json' | 'int';
-
-export interface Port<T> {
-  name: keyof T;
-  type: PortType;
-  defaultValue?: any;
-}
-
-interface NodeType<I, O> {
+interface NodeType {
   id: string;
-  ins?: (keyof I | Port<I>)[];
-  outs?: (keyof O)[];
-  ctor(): Promise<Context<I, O>>;
-  color?: string;
+  ins: { name: string; type: string }[];
+  outs: string[];
+  ctor(): Promise<Context>;
+  color: string;
 }
 
-export function nodeType<I, O>(nodeType: NodeType<I, O>) {
+export function nodeType(nodeType: NodeType) {
   return nodeType;
 }
 
@@ -103,16 +95,47 @@ function injectCSS() {
   document.body.appendChild(style);
 }
 
+function memoizeLastsInput(func: (i: any) => any | undefined) {
+  let memory: any = {};
+  const unset = Symbol('unset');
+  let output: any = unset;
+
+  return function (input: any) {
+    if (typeof input !== 'object') {
+      if (input !== memory) {
+        memory = input;
+        output = func(input);
+      }
+
+      return output;
+    }
+
+    let inputSame = true;
+    for (let name in input) {
+      if (memory[name] !== input[name]) {
+        inputSame = false;
+      }
+      memory[name] = input[name];
+    }
+
+    const numArgs = Object.keys(input).length;
+    if (!inputSame || output === unset || numArgs == 0) {
+      output = func(input);
+    }
+
+    return output;
+  };
+}
+
 export class NodeEditor {
   public domElement: HTMLElement;
   private editor: any;
-  private customNodesMap: { [key: string]: () => Core.Node } = {};
   private engine: PluginEngine.Engine;
 
   constructor() {
     injectCSS();
 
-    const intfTypePlugin = new InterfaceTypePlugin();
+    const interfaceTypePlugin = new InterfaceTypePlugin();
     this.domElement = document.createElement('div');
     this.domElement.style.width = '100%';
     this.domElement.style.height = '100%';
@@ -130,7 +153,7 @@ export class NodeEditor {
     );
     this.editor.use(this.engine);
     this.editor.use(new OptionPlugin());
-    this.editor.use(intfTypePlugin);
+    this.editor.use(interfaceTypePlugin);
 
     plugin.registerOption('InjectableOption', InjectableOption);
 
@@ -148,94 +171,66 @@ export class NodeEditor {
     });
   }
 
-  registerNodeType<I, O>({
-    id,
-    ins = [],
-    outs = [],
-    ctor,
-    color,
-  }: NodeType<I, O>) {
-    let BaklavaNodeBuilder = new Core.NodeBuilder(id).setName(id);
-    const inNames = ins.map(i => (typeof i === 'object' ? i.name : i));
-    const inObjects = ins.map(i =>
-      typeof i === 'object'
-        ? i
-        : ({ name: i, type: 'any', defaultValue: undefined } as Port<any>)
-    );
+  registerNodeType({ id, ins = [], outs = [], ctor, color }: NodeType) {
+    const baklavaNodeBuilder = new Core.NodeBuilder(id).setName(id);
+    const inNames = ins.map(i => i.name);
 
-    inObjects.forEach(({ name, type, defaultValue }) => {
-      const typeToOptionMap: Map<PortType, string | undefined> = new Map();
-      typeToOptionMap.set('any', undefined);
-      typeToOptionMap.set('bool', 'CheckboxOption');
-      typeToOptionMap.set('json', 'InputOption');
+    ins.forEach(({ name, type }) => {
+      const typeToOptionMap = {
+        any: undefined,
+        bool: 'CheckboxOption',
+        json: 'InputOption',
+      } as any;
 
-      BaklavaNodeBuilder = BaklavaNodeBuilder.addInputInterface(
+      baklavaNodeBuilder.addInputInterface(
         name as string,
-        typeToOptionMap.get(type),
-        JSON.stringify(defaultValue),
+        typeToOptionMap[type],
+        undefined, // JSON.stringify(defaultValue),
         { type }
       );
     });
 
-    outs.forEach(
-      outPort =>
-        (BaklavaNodeBuilder = BaklavaNodeBuilder.addOutputInterface(
-          outPort as string
-        ))
+    outs.forEach(outPort =>
+      baklavaNodeBuilder.addOutputInterface(outPort as string)
     );
 
     const decoratedCtor = () => {
-      BaklavaNodeBuilder = BaklavaNodeBuilder.onCalculate(
-        async (node, data) => {
-          const values = await Promise.all(
-            inNames.map(i => {
-              const interf = node.getInterface(i as string);
-              if (interf.type === 'json') {
-                try {
-                  return JSON.parse(interf.value);
-                } catch (e) {
-                  return interf.value;
-                }
-              }
+      const jsonMemory = memoizeLastsInput(x => JSON.parse(x));
 
-              return interf.value;
-            })
-          );
+      baklavaNodeBuilder.onCalculate(async (node: any, data) => {
+        const inMap: { [key: string]: string } = {};
+        const inValues = await Promise.all(
+          inNames.map(async key => {
+            const inter = await node.getInterface(key);
+            const value = await inter.value;
+            if (inter.type === 'json') {
+              try {
+                return jsonMemory(value);
+              } catch (e) {}
+            }
 
-          const inMap: { [key: string]: string } = {};
-          inNames.forEach((inName, index) => {
-            inMap[inName as string] = values[index];
-          });
+            return value;
+          })
+        );
 
-          const compute = await (node as any).$compute;
-          if (!compute) return;
+        inNames.forEach((name, i) => (inMap[name] = inValues[i]));
 
-          const unset = Symbol('unset');
-          let result: any = unset;
-          (outs as any[]).forEach(key => {
-            node.getInterface(key).value = async () => {
-              if (result === unset) {
-                result = await compute(inMap);
-              }
+        const compute = await node.$computePromise;
+        const result = await compute?.(inMap);
 
-              return result[key];
-            };
-          });
+        (outs as any[]).forEach(key => {
+          node.getInterface(key).value = result[key];
+        });
+      });
 
-          if (outs.length === 0) {
-            await compute(inMap);
-          }
-        }
-      );
+      const baklavaNodeCtor = baklavaNodeBuilder.build();
+      const baklavaNodeCtorInstance = new baklavaNodeCtor() as any;
 
-      const baklavaNodeCtor = BaklavaNodeBuilder.build();
-
-      const baklavaNodeInstance = new baklavaNodeCtor() as any;
-      baklavaNodeInstance.$color = color;
-      baklavaNodeInstance.$compute = new Promise(async resolve => {
-        const { domElement, compute } = await ctor();
+      baklavaNodeCtorInstance.$color = color;
+      baklavaNodeCtorInstance.$computePromise = new Promise(async resolve => {
+        let { domElement, compute } = await ctor();
         if (domElement) {
-          baklavaNodeInstance.addOption(
+          baklavaNodeCtorInstance.addOption(
             'injected option',
             'InjectableOption',
             undefined,
@@ -244,32 +239,19 @@ export class NodeEditor {
           );
         }
 
-        resolve(compute);
+        resolve(compute ? memoizeLastsInput(compute) : compute);
       });
 
-      baklavaNodeInstance.width = 'auto';
+      baklavaNodeCtorInstance.width = 'auto';
 
-      return baklavaNodeInstance as Core.Node;
+      return baklavaNodeCtorInstance as Core.Node;
     };
-    this.customNodesMap[id] = decoratedCtor;
 
     this.editor.registerNodeType(id, decoratedCtor);
   }
 
   async resolve() {
     this.engine.calculate();
-  }
-
-  addConnection(
-    fromNode: Core.Node,
-    toNode: Core.Node,
-    fromInterface: string,
-    toInterface: string
-  ) {
-    this.editor.addConnection(
-      fromNode.getInterface(fromInterface),
-      toNode.getInterface(toInterface)
-    );
   }
 
   exportState(): object {
